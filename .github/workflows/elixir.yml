@@ -1,0 +1,29 @@
+name: Elixir CI
+
+on: push
+
+jobs:
+  coveralls_with_tests:
+    runs-on: ubuntu-latest
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
+    services:
+      clickhouse:
+        image: yandex/clickhouse-server:latest
+        ports:
+        - 8123:8123
+    strategy:
+      matrix:
+        otp: [21.3.8.10, 22.1.7]
+        elixir: [1.9.4, 1.10.0]
+    env:
+      MIX_ENV: test
+      CLICKHOUSE_URL: "http://localhost:8123"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v1.0.0
+      - uses: actions/setup-elixir@v1.0.0
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - run: mix deps.get
+      - run: mix coveralls.github

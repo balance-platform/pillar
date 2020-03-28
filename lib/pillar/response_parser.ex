@@ -1,4 +1,5 @@
 defmodule Pillar.ResponseParser do
+  @moduledoc false
   alias Pillar.HttpClient.Response
   alias Pillar.HttpClient.TransportError
   alias Pillar.TypeConvert.ToElixir

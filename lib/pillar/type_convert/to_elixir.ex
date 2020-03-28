@@ -1,4 +1,5 @@
 defmodule Pillar.TypeConvert.ToElixir do
+  @moduledoc false
   def convert("String", value) do
     value
   end

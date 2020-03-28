@@ -1,4 +1,5 @@
 defmodule Pillar.QueryBuilder do
+  @moduledoc false
   alias Pillar.TypeConvert.ToClickhouse
 
   def build(query, params) when is_map(params) do

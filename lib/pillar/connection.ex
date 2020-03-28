@@ -1,4 +1,5 @@
 defmodule Pillar.Connection do
+  @moduledoc false
   defstruct host: nil,
             port: nil,
             scheme: nil,
@@ -12,7 +13,7 @@ defmodule Pillar.Connection do
     [user, password] =
       case uri.userinfo do
         nil -> [nil, nil]
-        str -> String.split(uri.userinfo, ":")
+        _str -> String.split(uri.userinfo, ":")
       end
 
     %__MODULE__{

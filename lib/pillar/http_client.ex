@@ -1,7 +1,5 @@
 defmodule Pillar.HttpClient do
-  @moduledoc """
-  Обвязка для http клиента, которая логирует запросы в рамках одного процесса
-  """
+  @moduledoc false
   require Logger
   alias Pillar.HttpClient.Response
   alias Pillar.HttpClient.TransportError
@@ -31,8 +29,6 @@ defmodule Pillar.HttpClient do
     end
   end
 
-  # Функция преобразования названий заголовков в нижний регистр, чтобы уменьшить зависимость от
-  # особенностей используемых http клиентов
   defp downcase_headers_names(headers) do
     Enum.map(headers, fn {key, value} ->
       {String.downcase(key), value}

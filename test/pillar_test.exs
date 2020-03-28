@@ -4,7 +4,8 @@ defmodule PillarTest do
   alias Pillar.Connection
 
   setup do
-    connection = Connection.from_string("http://localhost:8123")
+    connection_url =  Application.get_env(:pillar, :connection_url)
+    connection = Connection.from_string(connection_url)
 
     {:ok, %{conn: connection}}
   end
@@ -98,11 +99,11 @@ defmodule PillarTest do
                {:ok,
                 [
                   %{
-                    "Int16" => -32768,
+                    "Int16" => -32_768,
                     "Int32" => -2_147_483_648,
                     "Int64" => -9_223_372_036_854_775_808,
                     "Int8" => -127,
-                    "UInt16" => 65535,
+                    "UInt16" => 65_535,
                     "UInt32" => 4_294_967_295,
                     "UInt64" => 18_446_744_073_709_551_615,
                     "UInt8" => 255

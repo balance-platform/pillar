@@ -1,11 +1,13 @@
 # Pillar
 
-**TODO: Add description**
+Clickhouse elixir driver via HTTP connection
+
+[![Coverage Status](https://coveralls.io/repos/github/sofakingworld/pillar/badge.svg?branch=master)](https://coveralls.io/github/sofakingworld/pillar?branch=master)
+![build](https://github.com/sofakingworld/pillar/workflows/Elixir%20CI/badge.svg)
+
+<img src="https://sofakingworld.github.io/pillar.png" width="640">
 
 ## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `pillar` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
