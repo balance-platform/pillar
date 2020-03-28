@@ -27,6 +27,12 @@ defmodule PillarTest do
                Pillar.query(conn, "SELECT [now(), now(), NULL] as array")
     end
 
+    test "String test", %{conn: conn} do
+      sql = "SELECT 'ИВАН МИХАЛЫЧ' name"
+
+      assert {:ok, [%{"name" => "ИВАН МИХАЛЫЧ"}]} = Pillar.query(conn, sql)
+    end
+
     test "FixedString test", %{conn: conn} do
       create_table_sql = """
         CREATE TABLE IF NOT EXISTS fixed_string_table (field FixedString(10)) ENGINE = Memory

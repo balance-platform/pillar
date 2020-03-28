@@ -18,10 +18,10 @@ defmodule Pillar.HttpClient do
 
   defp response_to_app_structure(response_tuple) do
     case response_tuple do
-      {:ok, {{_http_ver, status_code, _a_status_desc}, headers, charlist_body}} ->
+      {:ok, {{_http_ver, status_code, _a_status_desc}, headers, body}} ->
         %Response{
           status_code: status_code,
-          body: to_string(charlist_body),
+          body: format_body(body),
           headers: downcase_headers_names(headers)
         }
 
@@ -36,4 +36,7 @@ defmodule Pillar.HttpClient do
       {String.downcase(string_key), to_string(value)}
     end)
   end
+
+  defp format_body(data) when is_list(data), do: IO.iodata_to_binary(data)
+  defp format_body(data) when is_binary(data), do: data
 end
