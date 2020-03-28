@@ -1,3 +1,4 @@
 import Config
 
-import_config "#{Mix.env()}.exs"
+config :pillar,
+  connection_url: System.get_env("CLICKHOUSE_URL") || "http://localhost:8123"

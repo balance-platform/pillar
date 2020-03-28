@@ -6,7 +6,7 @@ defmodule Pillar do
   alias Pillar.ResponseParser
 
   def query(%Connection{} = connection, query, params \\ %{}) do
-    final_sql = QueryBuilder.build(query, params) <> " FORMAT JSON"
+    final_sql = QueryBuilder.build(query, params) <> "\n FORMAT JSON"
 
     connection
     |> Connection.url_from_connection()

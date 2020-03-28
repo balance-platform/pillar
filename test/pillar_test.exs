@@ -4,7 +4,7 @@ defmodule PillarTest do
   alias Pillar.Connection
 
   setup do
-    connection_url =  Application.get_env(:pillar, :connection_url)
+    connection_url = Application.get_env(:pillar, :connection_url)
     connection = Connection.new(connection_url)
 
     {:ok, %{conn: connection}}
