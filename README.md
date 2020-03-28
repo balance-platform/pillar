@@ -21,7 +21,7 @@ params = %{lastname: "Smith"}
 {:ok, result} = Pillar.query(conn, sql, params)
 
 result 
-#=> %{"count(*)" => 347}
+#=> [%{"count(*)" => 347}]
 
 ```
 
