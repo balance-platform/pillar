@@ -5,14 +5,25 @@ defmodule Pillar.HttpClient do
   alias Pillar.HttpClient.TransportError
 
   def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
-    result = :httpc.request(:post, {String.to_charlist(url), [], 'application/json', String.to_charlist(post_body)},  [], [])
+    result =
+      :httpc.request(
+        :post,
+        {String.to_charlist(url), [], 'application/json', post_body},
+        options,
+        []
+      )
+
     response_to_app_structure(result)
   end
 
   defp response_to_app_structure(response_tuple) do
     case response_tuple do
       {:ok, {{_http_ver, status_code, _a_status_desc}, headers, charlist_body}} ->
-        %Response{status_code: status_code, body: to_string(charlist_body), headers: downcase_headers_names(headers)}
+        %Response{
+          status_code: status_code,
+          body: to_string(charlist_body),
+          headers: downcase_headers_names(headers)
+        }
 
       {:error, reason} ->
         %TransportError{reason: reason}
