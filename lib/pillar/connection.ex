@@ -7,7 +7,7 @@ defmodule Pillar.Connection do
             user: nil,
             database: nil
 
-  def from_string(str) do
+  def new(str) do
     uri = URI.parse(str)
 
     [user, password] =

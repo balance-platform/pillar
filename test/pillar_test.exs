@@ -5,7 +5,7 @@ defmodule PillarTest do
 
   setup do
     connection_url =  Application.get_env(:pillar, :connection_url)
-    connection = Connection.from_string(connection_url)
+    connection = Connection.new(connection_url)
 
     {:ok, %{conn: connection}}
   end

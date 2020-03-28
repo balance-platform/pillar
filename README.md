@@ -7,6 +7,24 @@ Clickhouse elixir driver via HTTP connection
 
 <img src="https://sofakingworld.github.io/pillar.png" width="640">
 
+## Usage
+
+```elixir
+
+conn = Pillar.Connection.new("http://user:password@localhost:8123/database)
+
+# params are passed in brackets {} in sql query, and map strtucture does fill query by values
+sql = "SELECT count(*) FROM users WHERE lastname = {lastname}"
+
+params = %{lastname: "Smith"}
+
+{:ok, result} = Pillar.query(conn, sql, params)
+
+result 
+#=> %{"count(*)" => 347}
+
+```
+
 ## Installation
 
 ```elixir

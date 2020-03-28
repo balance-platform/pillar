@@ -2,7 +2,7 @@ defmodule Pillar.ConnectionTest do
   alias Pillar.Connection
   use ExUnit.Case
 
-  test "#from_String - with all params" do
+  test "#new - with all params" do
     assert %Connection{
              database: "some_database",
              scheme: "https",
@@ -10,10 +10,10 @@ defmodule Pillar.ConnectionTest do
              user: "user",
              password: "password",
              port: 8123
-           } == Connection.from_string("https://user:password@localhost:8123/some_database")
+           } == Connection.new("https://user:password@localhost:8123/some_database")
   end
 
-  test "#from_String - minimum required params" do
+  test "#new - minimum required params" do
     assert %Connection{
              database: "default",
              host: "localhost",
@@ -21,7 +21,7 @@ defmodule Pillar.ConnectionTest do
              user: nil,
              password: nil,
              port: 8123
-           } == Connection.from_string("http://localhost:8123")
+           } == Connection.new("http://localhost:8123")
   end
 
   describe "#url_from_connection" do
