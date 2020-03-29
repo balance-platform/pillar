@@ -1,5 +1,16 @@
 defmodule Pillar.Connection do
-  @moduledoc false
+  @moduledoc """
+  Structure with connection config, such as host, port, user, password and other
+  """
+
+  @type t() :: %{
+          host: String.t(),
+          port: integer,
+          scheme: String.t(),
+          password: String.t(),
+          user: String.t(),
+          database: String.t()
+        }
   defstruct host: nil,
             port: nil,
             scheme: nil,
@@ -7,6 +18,17 @@ defmodule Pillar.Connection do
             user: nil,
             database: nil
 
+  @spec new(binary) :: Pillar.Connection.t()
+  @doc """
+  Generates Connection from typical connection string:
+
+  ```
+  %Pillar.Connection{} = Pillar.Connection.new("https://user:password@localhost:8123/some_database")
+
+  # in this case "default" database is used
+  %Pillar.Connection{} = Pillar.Connection.new("https://localhost:8123")
+  ```
+  """
   def new(str) do
     uri = URI.parse(str)
 

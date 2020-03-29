@@ -4,7 +4,7 @@ defmodule Pillar.MixProject do
   def project do
     [
       app: :pillar,
-      version: "0.5.0",
+      version: "0.5.1",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -25,7 +25,7 @@ defmodule Pillar.MixProject do
       source_url: "https://github.com/sofakingworld/pillar",
       homepage_url: "https://github.com/sofakingworld/pillar",
       docs: [
-        main: "Pillar",
+        main: "readme",
         extras: ["README.md"]
       ]
     ]

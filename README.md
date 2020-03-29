@@ -50,12 +50,7 @@ result
 ```elixir
 def deps do
   [
-    {:pillar, "~> 0.5.0"}
+    {:pillar, "~> 0.5.1"}
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/pillar](https://hexdocs.pm/pillar).
-
