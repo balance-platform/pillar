@@ -21,6 +21,10 @@ defmodule Pillar.TypeConvert.ToClickhouse do
     end
   end
 
+  def convert(param) when is_atom(param) do
+    Atom.to_string(param)
+  end
+
   def convert(param) when is_float(param) do
     to_string(param)
   end

@@ -3,6 +3,10 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
   use ExUnit.Case
 
   describe "#convert/1" do
+    test "Atom" do
+      assert ToClickhouse.convert(:error) == "error"
+    end
+
     test "nil" do
       assert ToClickhouse.convert(nil) == "NULL"
     end
