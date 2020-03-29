@@ -41,7 +41,7 @@ result
   # delayed inserts
   ClickhouseMaster.async_query("INSERT INTO events (user_id, event) SELECT {user_id}, {event}", %{
     user_id: user.id,
-    event: "registred"
+    event: "password_changed"
   }) # => :ok
 ```
 
