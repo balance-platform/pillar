@@ -10,6 +10,29 @@ defmodule PillarTest do
     {:ok, %{conn: connection}}
   end
 
+  describe "GenServer tests" do
+    defmodule PillarWorker do
+      use Pillar,
+        connection_string: Application.get_env(:pillar, :connection_url),
+        name: __MODULE__
+    end
+
+    setup do
+      {:ok, pid} = PillarWorker.start_link()
+      {:ok, %{pid: pid}}
+    end
+
+    test "#query - without passing connection", %{pid: pid} do
+      assert Process.alive?(pid) == true
+      assert PillarWorker.query("SELECT 1") == {:ok, [%{"1" => 1}]}
+    end
+
+    test "#async_query", %{pid: pid} do
+      assert Process.alive?(pid) == true
+      assert PillarWorker.async_query("SELECT 1") == :ok
+    end
+  end
+
   describe "data types tests" do
     test "UUID test", %{conn: conn} do
       assert {:ok, [%{"uuid" => uuid}]} = Pillar.query(conn, "SELECT generateUUIDv4() as uuid")

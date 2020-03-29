@@ -9,9 +9,11 @@ Clickhouse elixir driver via HTTP connection
 
 ## Usage
 
+### Direct Usage with connection structure
+
 ```elixir
 
-conn = Pillar.Connection.new("http://user:password@localhost:8123/database)
+conn = Pillar.Connection.new("http://user:password@localhost:8123/database")
 
 # params are passed in brackets {} in sql query, and map strtucture does fill query by values
 sql = "SELECT count(*) FROM users WHERE lastname = {lastname}"
@@ -23,6 +25,24 @@ params = %{lastname: "Smith"}
 result 
 #=> [%{"count(*)" => 347}]
 
+```
+
+### Delayed inserts feature
+
+```elixir
+  defmodule ClickhouseMaster do
+      use Pillar, 
+        connection_string: "http://user:password@localhost:8123/database",
+        name: __MODULE__
+  end
+
+  ClickhouseMaster.start_link()
+
+  # delayed inserts
+  ClickhouseMaster.async_query("INSERT INTO events (user_id, event) SELECT {user_id}, {event}", %{
+    user_id: user.id,
+    event: "registred"
+  }) # => :ok
 ```
 
 ## Installation
