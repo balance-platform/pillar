@@ -5,7 +5,8 @@ defmodule Pillar.Pool.Worker do
     GenServer.start_link(__MODULE__, connection_string)
   end
 
-  def init(connection_string) do
+  def init(connection_string_list) when is_list(connection_string_list) do
+    connection_string = Enum.random(connection_string_list)
     {:ok, Pillar.Connection.new(connection_string)}
   end
 

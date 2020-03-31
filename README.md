@@ -32,7 +32,10 @@ result
 ```elixir
   defmodule ClickhouseMaster do
       use Pillar, 
-        connection_string: "http://user:password@localhost:8123/database",
+        connection_strings: [
+          "http://user:password@host-master-1:8123/database",
+          "http://user:password@host-master-2:8123/database"
+        ],
         name: __MODULE__,
         pool_size: 15
   end

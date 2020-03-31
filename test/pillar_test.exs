@@ -13,7 +13,7 @@ defmodule PillarTest do
   describe "GenServer tests" do
     defmodule PillarWorker do
       use Pillar,
-        connection_string: Application.get_env(:pillar, :connection_url),
+        connection_strings: List.wrap(Application.get_env(:pillar, :connection_url)),
         name: __MODULE__,
         pool_size: 3
     end
