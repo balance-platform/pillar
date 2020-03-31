@@ -4,7 +4,7 @@ defmodule Pillar.MixProject do
   def project do
     [
       app: :pillar,
-      version: "0.5.1",
+      version: "0.6.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -42,6 +42,7 @@ defmodule Pillar.MixProject do
   defp deps do
     [
       {:jason, ">= 1.0.0"},
+      {:poolboy, "~> 1.5.1"},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.12.2", only: :test},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},

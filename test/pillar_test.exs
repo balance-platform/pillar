@@ -14,7 +14,8 @@ defmodule PillarTest do
     defmodule PillarWorker do
       use Pillar,
         connection_string: Application.get_env(:pillar, :connection_url),
-        name: __MODULE__
+        name: __MODULE__,
+        pool_size: 3
     end
 
     setup do

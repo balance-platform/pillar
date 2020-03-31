@@ -33,7 +33,8 @@ result
   defmodule ClickhouseMaster do
       use Pillar, 
         connection_string: "http://user:password@localhost:8123/database",
-        name: __MODULE__
+        name: __MODULE__,
+        pool_size: 15
   end
 
   ClickhouseMaster.start_link()

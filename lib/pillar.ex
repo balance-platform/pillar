@@ -15,34 +15,53 @@ defmodule Pillar do
     |> ResponseParser.parse()
   end
 
-  defmacro __using__(connection_string: connection_string, name: name) do
+  defmacro __using__(
+             connection_string: connection_string,
+             name: name,
+             pool_size: pool_size
+           ) do
     quote do
       use GenServer
+      import Supervisor.Spec
+
+      @pool_timeout_for_waiting_worker 1_000
+
+      defp poolboy_config do
+        [
+          name: {:local, unquote(name)},
+          worker_module: Pillar.Pool.Worker,
+          size: unquote(pool_size),
+          max_overflow: Kernel.ceil(unquote(pool_size) * 0.3)
+        ]
+      end
 
       def start_link(_opts \\ nil) do
-        GenServer.start_link(__MODULE__, unquote(connection_string), name: unquote(name))
+        children = [
+          :poolboy.child_spec(:worker, poolboy_config(), unquote(connection_string))
+        ]
+
+        opts = [strategy: :one_for_one, name: :"#{unquote(name)}.Supervisor"]
+        Supervisor.start_link(children, opts)
+      end
+
+      def init(init_arg) do
+        {:ok, init_arg}
       end
 
       def query(sql, params \\ %{}) do
-        GenServer.call(unquote(name), {sql, params})
+        :poolboy.transaction(
+          unquote(name),
+          fn pid -> GenServer.call(pid, {sql, params}) end,
+          @pool_timeout_for_waiting_worker
+        )
       end
 
       def async_query(sql, params \\ %{}) do
-        GenServer.cast(unquote(name), {sql, params})
-      end
-
-      def init(connection_string) do
-        {:ok, Connection.new(connection_string)}
-      end
-
-      def handle_call({query, params}, _from, state) do
-        {:ok, result} = Pillar.query(state, query, params)
-        {:reply, {:ok, result}, state}
-      end
-
-      def handle_cast({query, params}, state) do
-        {:ok, _result} = Pillar.query(state, query, params)
-        {:noreply, state}
+        :poolboy.transaction(
+          unquote(name),
+          fn pid -> GenServer.cast(pid, {sql, params}) end,
+          @pool_timeout_for_waiting_worker
+        )
       end
     end
   end
