@@ -6,12 +6,13 @@ defmodule Pillar do
   alias Pillar.QueryBuilder
   alias Pillar.ResponseParser
 
-  def query(%Connection{} = connection, query, params \\ %{}) do
+  def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.build(query, params) <> "\n FORMAT JSON"
+    timeout = Map.get(options, :timeout, 5_000)
 
     connection
     |> Connection.url_from_connection()
-    |> HttpClient.post(final_sql)
+    |> HttpClient.post(final_sql, timeout: timeout)
     |> ResponseParser.parse()
   end
 
@@ -48,18 +49,18 @@ defmodule Pillar do
         {:ok, init_arg}
       end
 
-      def query(sql, params \\ %{}) do
+      def query(sql, params \\ %{}, options \\ %{}) do
         :poolboy.transaction(
           unquote(name),
-          fn pid -> GenServer.call(pid, {sql, params}) end,
+          fn pid -> GenServer.call(pid, {sql, params, options}, :infinity) end,
           @pool_timeout_for_waiting_worker
         )
       end
 
-      def async_query(sql, params \\ %{}) do
+      def async_query(sql, params \\ %{}, options \\ %{}) do
         :poolboy.transaction(
           unquote(name),
-          fn pid -> GenServer.cast(pid, {sql, params}) end,
+          fn pid -> GenServer.cast(pid, {sql, params, options}) end,
           @pool_timeout_for_waiting_worker
         )
       end

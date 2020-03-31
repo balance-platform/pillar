@@ -9,13 +9,13 @@ defmodule Pillar.Pool.Worker do
     {:ok, Pillar.Connection.new(connection_string)}
   end
 
-  def handle_call({query, params}, _from, state) do
-    {:ok, result} = Pillar.query(state, query, params)
-    {:reply, {:ok, result}, state}
+  def handle_call({query, params, options}, _from, state) do
+    result = Pillar.query(state, query, params, options)
+    {:reply, result, state}
   end
 
-  def handle_cast({query, params}, state) do
-    {:ok, _result} = Pillar.query(state, query, params)
+  def handle_cast({query, params, options}, state) do
+    {:ok, _result} = Pillar.query(state, query, params, options)
     {:noreply, state}
   end
 end

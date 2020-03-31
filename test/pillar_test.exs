@@ -28,6 +28,11 @@ defmodule PillarTest do
       assert PillarWorker.query("SELECT 1") == {:ok, [%{"1" => 1}]}
     end
 
+    test "#query - timeout tests" do
+      assert PillarWorker.query("SELECT now()", %{}, %{timeout: 0}) ==
+               {:error, %Pillar.HttpClient.TransportError{reason: :timeout}}
+    end
+
     test "#async_query", %{pid: pid} do
       assert Process.alive?(pid) == true
       assert PillarWorker.async_query("SELECT 1") == :ok
