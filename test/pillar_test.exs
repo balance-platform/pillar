@@ -29,7 +29,7 @@ defmodule PillarTest do
     end
 
     test "#query - timeout tests" do
-      assert PillarWorker.query("SELECT now()", %{}, %{timeout: 0}) ==
+      assert PillarWorker.query("SELECT sleep(1)", %{}, %{timeout: 0}) ==
                {:error, %Pillar.HttpClient.TransportError{reason: :timeout}}
     end
 
