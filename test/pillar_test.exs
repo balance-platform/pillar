@@ -94,6 +94,22 @@ defmodule PillarTest do
                Pillar.query(conn, "SELECT * FROM enum8_table LIMIT 1")
     end
 
+    test "LowCardinality(String)", %{conn: conn} do
+      create_table_sql = """
+      CREATE TABLE IF NOT EXISTS lc_table (field LowCardinality(String)) ENGINE = Memory
+      """
+
+      insert_query_sql = """
+      INSERT INTO lc_table SELECT 'val'
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+      assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
+
+      assert {:ok, [%{"field" => "val"}]} =
+        Pillar.query(conn, "SELECT * FROM lc_table LIMIT 1")
+    end
+
     test "Date test", %{conn: conn} do
       sql = "SELECT today()"
 
@@ -108,7 +124,7 @@ defmodule PillarTest do
 
     test "Float tests", %{conn: conn} do
       sql = ~s(
-        SELECT 
+        SELECT
           -127.0 Float32,
           -92233720368.31 Float64
       )
@@ -119,7 +135,7 @@ defmodule PillarTest do
 
     test "Integer tests", %{conn: conn} do
       sql = ~s(
-        SELECT 
+        SELECT
           -127 Int8,
           -32768 Int16,
           -2147483648 Int32,

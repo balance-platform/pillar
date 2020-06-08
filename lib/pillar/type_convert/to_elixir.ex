@@ -4,6 +4,10 @@ defmodule Pillar.TypeConvert.ToElixir do
     value
   end
 
+  def convert("LowCardinality(String)", value) do
+    value
+  end
+
   def convert("UUID", value) do
     value
   end
