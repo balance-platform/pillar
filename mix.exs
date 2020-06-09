@@ -5,7 +5,7 @@ defmodule Pillar.MixProject do
     [
       app: :pillar,
       aliases: aliases(),
-      version: "0.9.0",
+      version: "0.9.1",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -21,10 +21,10 @@ defmodule Pillar.MixProject do
       dialyzer: [
         plt_add_deps: :transitive
       ],
-      source_url: "https://github.com/sofakingworld/pillar",
+      source_url: "https://github.com/CatTheMagician/pillar",
       name: "Pillar",
-      source_url: "https://github.com/sofakingworld/pillar",
-      homepage_url: "https://github.com/sofakingworld/pillar",
+      source_url: "https://github.com/CatTheMagician/pillar",
+      homepage_url: "https://github.com/CatTheMagician/pillar",
       docs: [
         main: "readme",
         extras: ["README.md"]
@@ -62,7 +62,7 @@ defmodule Pillar.MixProject do
       # These are the default files included in the package
       files: ~w(lib .formatter.exs mix.exs README*),
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/sofakingworld/pillar"}
+      links: %{"GitHub" => "https://github.com/CatTheMagician/pillar"}
     ]
   end
 

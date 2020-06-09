@@ -3,7 +3,7 @@
 Clickhouse elixir driver via HTTP connection
 
 [![Coverage Status](https://coveralls.io/repos/github/sofakingworld/pillar/badge.svg?branch=master)](https://coveralls.io/github/sofakingworld/pillar?branch=master)
-![build](https://github.com/sofakingworld/pillar/workflows/Elixir%20CI/badge.svg)
+![build](https://github.com/CatTheMagician/pillar/workflows/Elixir%20CI/badge.svg)
 
 <img src="https://sofakingworld.github.io/pillar.png" width="640">
 
@@ -54,7 +54,7 @@ result
 ```elixir
 def deps do
   [
-    {:pillar, "~> 0.9.0"}
+    {:pillar, "~> 0.9.1"}
   ]
 end
 ```
