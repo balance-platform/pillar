@@ -18,7 +18,6 @@ defmodule Pillar.Connection do
             user: nil,
             database: nil
 
-  @spec new(binary) :: Pillar.Connection.t()
   @doc """
   Generates Connection from typical connection string:
 
@@ -29,6 +28,7 @@ defmodule Pillar.Connection do
   %Pillar.Connection{} = Pillar.Connection.new("https://localhost:8123")
   ```
   """
+  @spec new(String.t()) :: Pillar.Connection.t()
   def new(str) do
     uri = URI.parse(str)
 

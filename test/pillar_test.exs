@@ -106,8 +106,7 @@ defmodule PillarTest do
       assert {:ok, ""} = Pillar.query(conn, create_table_sql)
       assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
 
-      assert {:ok, [%{"field" => "val"}]} =
-        Pillar.query(conn, "SELECT * FROM lc_table LIMIT 1")
+      assert {:ok, [%{"field" => "val"}]} = Pillar.query(conn, "SELECT * FROM lc_table LIMIT 1")
     end
 
     test "Date test", %{conn: conn} do

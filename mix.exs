@@ -4,7 +4,8 @@ defmodule Pillar.MixProject do
   def project do
     [
       app: :pillar,
-      version: "0.8.1",
+      aliases: aliases(),
+      version: "0.9.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -62,6 +63,13 @@ defmodule Pillar.MixProject do
       files: ~w(lib .formatter.exs mix.exs README*),
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/sofakingworld/pillar"}
+    ]
+  end
+
+  defp aliases() do
+    [
+      test: ["format --check-formatted", "test"],
+      check_code: ["credo", "format", "dialyzer"]
     ]
   end
 end
