@@ -9,13 +9,21 @@ defmodule Pillar.ResponseParser do
   end
 
   def parse(%Response{status_code: 200, body: body}) do
-    case Jason.decode(body) do
-      {:ok, map} ->
-        meta = join_meta_to_map(map["meta"])
-        {:ok, Enum.map(map["data"], fn row -> convert_row(meta, row) end)}
+    {atom, result} = Jason.decode(body)
 
-      {:error, reason} ->
-        {:error, reason}
+    cond do
+      atom == :ok && is_map(result) ->
+        meta = join_meta_to_map(result["meta"])
+        {:ok, Enum.map(result["data"], fn row -> convert_row(meta, row) end)}
+
+      atom == :ok ->
+        {:ok, result}
+
+      %Jason.DecodeError{data: data} = result ->
+        {:ok, data}
+
+      true ->
+        {:ok, result}
     end
   end
 

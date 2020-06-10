@@ -26,7 +26,7 @@ defmodule Pillar.TypeConvert.ToClickhouse do
   end
 
   def convert(param) when is_float(param) do
-    to_string(param)
+    Float.to_string(param)
   end
 
   def convert(%DateTime{} = datetime) do

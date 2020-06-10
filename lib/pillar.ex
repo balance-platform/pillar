@@ -14,6 +14,13 @@ defmodule Pillar do
   end
 
   def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
+    final_sql = QueryBuilder.build(query, params)
+    timeout = Map.get(options, :timeout, 5_000)
+
+    execute_sql(connection, final_sql, timeout)
+  end
+
+  def select(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.build(query, params) <> "\n FORMAT JSON"
     timeout = Map.get(options, :timeout, 5_000)
 
@@ -58,6 +65,14 @@ defmodule Pillar do
 
       def init(init_arg) do
         {:ok, init_arg}
+      end
+
+      def select(sql, params \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid -> GenServer.call(pid, {:select, sql, params, options}, :infinity) end,
+          @pool_timeout_for_waiting_worker
+        )
       end
 
       def query(sql, params \\ %{}, options \\ %{}) do
