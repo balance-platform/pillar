@@ -3,6 +3,8 @@ defmodule PillarTest do
   doctest Pillar
   alias Pillar.Connection
 
+  @timestamp DateTime.to_unix(DateTime.utc_now())
+
   setup do
     connection_url = Application.get_env(:pillar, :connection_url)
     connection = Connection.new(connection_url)
@@ -37,6 +39,58 @@ defmodule PillarTest do
       assert Process.alive?(pid) == true
       assert PillarWorker.async_query("SELECT 1") == :ok
     end
+
+    test "#async_insert", %{pid: pid} do
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS async_insert_test_#{@timestamp} (field FixedString(10)) ENGINE = Memory
+      """
+
+      insert_query_sql = """
+        INSERT INTO async_insert_test_#{@timestamp} VALUES ('0123456789')
+      """
+
+      assert Process.alive?(pid) == true
+      assert PillarWorker.query(create_table_sql) == {:ok, ""}
+      assert PillarWorker.async_insert(insert_query_sql) == :ok
+      :timer.sleep(100)
+
+      assert {:ok, [%{"field" => "0123456789"}]} =
+               PillarWorker.query("SELECT * FROM async_insert_test_#{@timestamp}")
+    end
+
+    test "#insert with VALUES syntax", %{pid: pid} do
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS insert_with_values_#{@timestamp} (field FixedString(10)) ENGINE = Memory
+      """
+
+      insert_query_sql = """
+        INSERT INTO insert_with_values_#{@timestamp} (field) VALUES ('0123456789')
+      """
+
+      assert Process.alive?(pid) == true
+      assert PillarWorker.query(create_table_sql) == {:ok, ""}
+      assert PillarWorker.insert(insert_query_sql) == {:ok, ""}
+
+      assert {:ok, [%{"field" => "0123456789"}]} =
+               PillarWorker.query("SELECT * FROM insert_with_values_#{@timestamp}")
+    end
+
+    test "#insert with SELECT syntax", %{pid: pid} do
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS insert_with_select_#{@timestamp} (field FixedString(10)) ENGINE = Memory
+      """
+
+      insert_query_sql = """
+        INSERT INTO insert_with_select_#{@timestamp} (field) SELECT '0123456789'
+      """
+
+      assert Process.alive?(pid) == true
+      assert PillarWorker.query(create_table_sql) == {:ok, ""}
+      assert PillarWorker.insert(insert_query_sql) == {:ok, ""}
+
+      assert {:ok, [%{"field" => "0123456789"}]} =
+               PillarWorker.query("SELECT * FROM insert_with_select_#{@timestamp}")
+    end
   end
 
   describe "data types tests" do
@@ -68,11 +122,11 @@ defmodule PillarTest do
       """
 
       insert_query_sql = """
-        INSERT INTO fixed_string_table SELECT '0123456789'
+        INSERT INTO fixed_string_table VALUES ('0123456789')
       """
 
       assert {:ok, ""} = Pillar.query(conn, create_table_sql)
-      assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
+      assert {:ok, ""} = Pillar.insert(conn, insert_query_sql)
 
       assert {:ok, [%{"field" => "0123456789"}]} =
                Pillar.query(conn, "SELECT * FROM fixed_string_table LIMIT 1")

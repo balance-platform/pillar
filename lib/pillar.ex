@@ -6,10 +6,21 @@ defmodule Pillar do
   alias Pillar.QueryBuilder
   alias Pillar.ResponseParser
 
+  def insert(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
+    final_sql = QueryBuilder.build(query, params)
+    timeout = Map.get(options, :timeout, 5_000)
+
+    execute_sql(connection, final_sql, timeout)
+  end
+
   def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.build(query, params) <> "\n FORMAT JSON"
     timeout = Map.get(options, :timeout, 5_000)
 
+    execute_sql(connection, final_sql, timeout)
+  end
+
+  defp execute_sql(connection, final_sql, timeout) do
     connection
     |> Connection.url_from_connection()
     |> HttpClient.post(final_sql, timeout: timeout)
@@ -52,7 +63,7 @@ defmodule Pillar do
       def query(sql, params \\ %{}, options \\ %{}) do
         :poolboy.transaction(
           unquote(name),
-          fn pid -> GenServer.call(pid, {sql, params, options}, :infinity) end,
+          fn pid -> GenServer.call(pid, {:query, sql, params, options}, :infinity) end,
           @pool_timeout_for_waiting_worker
         )
       end
@@ -60,7 +71,23 @@ defmodule Pillar do
       def async_query(sql, params \\ %{}, options \\ %{}) do
         :poolboy.transaction(
           unquote(name),
-          fn pid -> GenServer.cast(pid, {sql, params, options}) end,
+          fn pid -> GenServer.cast(pid, {:query, sql, params, options}) end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
+
+      def insert(sql, params \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid -> GenServer.call(pid, {:insert, sql, params, options}, :infinity) end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
+
+      def async_insert(sql, params \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid -> GenServer.cast(pid, {:insert, sql, params, options}) end,
           @pool_timeout_for_waiting_worker
         )
       end
