@@ -27,7 +27,7 @@ defmodule PillarTest do
 
     test "#query - without passing connection", %{pid: pid} do
       assert Process.alive?(pid) == true
-      assert PillarWorker.query("SELECT 1") == {:ok, [%{"1" => 1}]}
+      assert PillarWorker.query("SELECT 1 FORMAT JSON") == {:ok, [%{"1" => 1}]}
     end
 
     test "#query - timeout tests" do
@@ -55,7 +55,7 @@ defmodule PillarTest do
       :timer.sleep(100)
 
       assert {:ok, [%{"field" => "0123456789"}]} =
-               PillarWorker.query("SELECT * FROM async_insert_test_#{@timestamp}")
+               PillarWorker.select("SELECT * FROM async_insert_test_#{@timestamp}")
     end
 
     test "#insert with VALUES syntax", %{pid: pid} do
@@ -72,7 +72,7 @@ defmodule PillarTest do
       assert PillarWorker.insert(insert_query_sql) == {:ok, ""}
 
       assert {:ok, [%{"field" => "0123456789"}]} =
-               PillarWorker.query("SELECT * FROM insert_with_values_#{@timestamp}")
+               PillarWorker.select("SELECT * FROM insert_with_values_#{@timestamp}")
     end
 
     test "#insert with SELECT syntax", %{pid: pid} do
@@ -89,29 +89,29 @@ defmodule PillarTest do
       assert PillarWorker.insert(insert_query_sql) == {:ok, ""}
 
       assert {:ok, [%{"field" => "0123456789"}]} =
-               PillarWorker.query("SELECT * FROM insert_with_select_#{@timestamp}")
+               PillarWorker.select("SELECT * FROM insert_with_select_#{@timestamp}")
     end
   end
 
   describe "data types tests" do
     test "UUID test", %{conn: conn} do
-      assert {:ok, [%{"uuid" => uuid}]} = Pillar.query(conn, "SELECT generateUUIDv4() as uuid")
+      assert {:ok, [%{"uuid" => uuid}]} = Pillar.select(conn, "SELECT generateUUIDv4() as uuid")
 
       assert String.valid?(uuid) && String.length(uuid) == 36
     end
 
     test "Array test", %{conn: conn} do
-      assert {:ok, [%{"array" => [1, 2, 3]}]} = Pillar.query(conn, "SELECT [1, 2, 3] as array")
+      assert {:ok, [%{"array" => [1, 2, 3]}]} = Pillar.select(conn, "SELECT [1, 2, 3] as array")
 
       assert {:ok, [%{"array" => ["1", "2", "3"]}]} =
-               Pillar.query(conn, "SELECT ['1', '2', '3'] as array")
+               Pillar.select(conn, "SELECT ['1', '2', '3'] as array")
 
       assert {:ok, [%{"array" => [%DateTime{}, %DateTime{}, nil]}]} =
-               Pillar.query(conn, "SELECT [now(), now(), NULL] as array")
+               Pillar.select(conn, "SELECT [now(), now(), NULL] as array")
     end
 
     test "String test", %{conn: conn} do
-      sql = "SELECT 'ИВАН МИХАЛЫЧ' name"
+      sql = "SELECT 'ИВАН МИХАЛЫЧ' name FORMAT JSON"
 
       assert {:ok, [%{"name" => "ИВАН МИХАЛЫЧ"}]} = Pillar.query(conn, sql)
     end
@@ -129,7 +129,7 @@ defmodule PillarTest do
       assert {:ok, ""} = Pillar.insert(conn, insert_query_sql)
 
       assert {:ok, [%{"field" => "0123456789"}]} =
-               Pillar.query(conn, "SELECT * FROM fixed_string_table LIMIT 1")
+               Pillar.select(conn, "SELECT * FROM fixed_string_table LIMIT 1")
     end
 
     test "Enum8 test", %{conn: conn} do
@@ -145,7 +145,7 @@ defmodule PillarTest do
       assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
 
       assert {:ok, [%{"field" => "VAL1"}]} =
-               Pillar.query(conn, "SELECT * FROM enum8_table LIMIT 1")
+               Pillar.select(conn, "SELECT * FROM enum8_table LIMIT 1")
     end
 
     test "LowCardinality(String)", %{conn: conn} do
@@ -160,19 +160,20 @@ defmodule PillarTest do
       assert {:ok, ""} = Pillar.query(conn, create_table_sql)
       assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
 
-      assert {:ok, [%{"field" => "val"}]} = Pillar.query(conn, "SELECT * FROM lc_table LIMIT 1")
+      assert {:ok, [%{"field" => "val"}]} =
+               Pillar.query(conn, "SELECT * FROM lc_table LIMIT 1 FORMAT JSON")
     end
 
     test "Date test", %{conn: conn} do
       sql = "SELECT today()"
 
-      assert {:ok, [%{"today()" => %Date{}}]} = Pillar.query(conn, sql)
+      assert {:ok, [%{"today()" => %Date{}}]} = Pillar.select(conn, sql)
     end
 
     test "DateTime test", %{conn: conn} do
       sql = "SELECT now()"
 
-      assert {:ok, [%{"now()" => %DateTime{}}]} = Pillar.query(conn, sql)
+      assert {:ok, [%{"now()" => %DateTime{}}]} = Pillar.select(conn, sql)
     end
 
     test "Float tests", %{conn: conn} do
@@ -182,7 +183,7 @@ defmodule PillarTest do
           -92233720368.31 Float64
       )
 
-      assert Pillar.query(conn, sql) ==
+      assert Pillar.select(conn, sql) ==
                {:ok, [%{"Float32" => -127, "Float64" => -92_233_720_368.31}]}
     end
 
@@ -197,6 +198,7 @@ defmodule PillarTest do
           65535 UInt16,
           4294967295 UInt32,
           18446744073709551615 UInt64
+        FORMAT JSON
       )
 
       assert Pillar.query(conn, sql) ==
@@ -216,8 +218,13 @@ defmodule PillarTest do
     end
   end
 
-  test "#query/2 - select numbers", %{conn: conn} do
+  test "#query/2 - query numbers", %{conn: conn} do
     assert Pillar.query(conn, "SELECT * FROM system.numbers LIMIT 5") ==
+             {:ok, "0\n1\n2\n3\n4\n"}
+  end
+
+  test "#query/2 - select numbers", %{conn: conn} do
+    assert Pillar.select(conn, "SELECT * FROM system.numbers LIMIT 5") ==
              {:ok,
               [
                 %{"number" => 0},
@@ -229,7 +236,7 @@ defmodule PillarTest do
   end
 
   test "#query/3 - select numbers", %{conn: conn} do
-    assert Pillar.query(conn, "SELECT * FROM system.numbers LIMIT {limit}", %{limit: 1}) ==
+    assert Pillar.select(conn, "SELECT * FROM system.numbers LIMIT {limit}", %{limit: 1}) ==
              {:ok,
               [
                 %{"number" => 0}

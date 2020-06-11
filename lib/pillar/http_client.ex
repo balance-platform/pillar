@@ -37,6 +37,6 @@ defmodule Pillar.HttpClient do
     end)
   end
 
-  defp format_body(data) when is_list(data), do: IO.iodata_to_binary(data)
   defp format_body(data) when is_binary(data), do: data
+  defp format_body(data) when is_list(data), do: IO.iodata_to_binary(data)
 end
