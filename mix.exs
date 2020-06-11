@@ -5,7 +5,7 @@ defmodule Pillar.MixProject do
     [
       app: :pillar,
       aliases: aliases(),
-      version: "0.10.0",
+      version: "0.11.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),

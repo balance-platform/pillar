@@ -54,7 +54,7 @@ result
 ```elixir
 def deps do
   [
-    {:pillar, "~> 0.10.0"}
+    {:pillar, "~> 0.11.0"}
   ]
 end
 ```
