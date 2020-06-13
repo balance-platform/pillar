@@ -27,7 +27,9 @@ result
 
 ```
 
-### Delayed inserts feature
+### Usage with workers supervisor tree
+
+Recommended usage, becouse of limited connections and supervised workers
 
 ```elixir
   defmodule ClickhouseMaster do
@@ -42,8 +44,40 @@ result
 
   ClickhouseMaster.start_link()
 
-  # delayed inserts
-  ClickhouseMaster.async_insert("INSERT INTO events (user_id, event) SELECT {user_id}, {event}", %{
+  {:ok, result} = ClickhouseMaster.select(sql, %{param: value})
+```
+### Migrations
+
+Migrations can be generated with mix task `mix pillar.gen.migration migration_name`
+
+```bash
+mix pillar.gen.migration events_table
+```
+
+But for launching them we have to write own task, like this:
+```elixir
+
+defmodule Mix.Tasks.MigrateClickhouse do
+  use Mix.Task
+  def run(_args) do
+    connection_string = Application.get_env(:my_project, :clickhouse_url)  
+    conn = Pillar.Connection.new(connection_string)
+    Pillar.Migrations.migrate(conn)
+  end
+end
+```
+
+And launch this via command
+```bash
+mix migrate_clickhouse
+```
+
+### Delayed requests feature
+
+```elixir
+  connection = Pillar.Connection.new("http://user:password@host-master-1:8123/database")
+
+  Pillar.async_insert(connection, "INSERT INTO events (user_id, event) SELECT {user_id}, {event}", %{
     user_id: user.id,
     event: "password_changed"
   }) # => :ok
