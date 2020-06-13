@@ -5,7 +5,7 @@ Clickhouse elixir driver via HTTP connection
 [![Coverage Status](https://coveralls.io/repos/github/sofakingworld/pillar/badge.svg?branch=master)](https://coveralls.io/github/sofakingworld/pillar?branch=master)
 ![build](https://github.com/CatTheMagician/pillar/workflows/Elixir%20CI/badge.svg)
 
-<img src="https://sofakingworld.github.io/pillar.png" width="640">
+<img src="https://sofakingworld.github.io/pillar.png" width="240">
 
 ## Usage
 
