@@ -88,7 +88,7 @@ mix migrate_clickhouse
 ```elixir
 def deps do
   [
-    {:pillar, "~> 0.11.0"}
+    {:pillar, "~> 0.12.0"}
   ]
 end
 ```
