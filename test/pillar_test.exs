@@ -216,6 +216,12 @@ defmodule PillarTest do
                   }
                 ]}
     end
+
+    test "Parentheses tests", %{conn: conn} do
+      sql = "SELECT IF(0 == 1, NULL, 2) as number"
+
+      assert Pillar.select(conn, sql) == {:ok, [%{"number" => 2}]}
+    end
   end
 
   test "#query/2 - query numbers", %{conn: conn} do

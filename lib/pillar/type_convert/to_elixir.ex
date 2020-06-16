@@ -1,5 +1,11 @@
 defmodule Pillar.TypeConvert.ToElixir do
   @moduledoc false
+
+  def convert("(" <> type_with_parenthese, value) do
+    {type, ")"} = String.split_at(type_with_parenthese, -1)
+    convert(type, value)
+  end
+
   def convert("String", value) do
     value
   end
