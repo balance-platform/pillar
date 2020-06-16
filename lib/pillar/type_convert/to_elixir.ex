@@ -2,6 +2,8 @@ defmodule Pillar.TypeConvert.ToElixir do
   @moduledoc false
 
   def convert("(" <> type_with_parenthese, value) do
+    # For example (UInt64), this type returns when IF function returns NULL or Uint64
+    # SELECT IF(1 == 2, NULL, 64) 
     {type, ")"} = String.split_at(type_with_parenthese, -1)
     convert(type, value)
   end
