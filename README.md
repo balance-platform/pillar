@@ -29,7 +29,7 @@ result
 
 ### Usage with workers supervisor tree
 
-Recommended usage, becouse of limited connections and supervised workers
+Recommended usage, because of limited connections and supervised workers
 
 ```elixir
   defmodule ClickhouseMaster do
