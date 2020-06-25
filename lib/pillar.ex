@@ -6,23 +6,25 @@ defmodule Pillar do
   alias Pillar.QueryBuilder
   alias Pillar.ResponseParser
 
+  @default_timeout_ms 5_000
+
   def insert(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.build(query, params)
-    timeout = Map.get(options, :timeout, 5_000)
+    timeout = Map.get(options, :timeout, @default_timeout_ms)
 
     execute_sql(connection, final_sql, timeout)
   end
 
   def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.build(query, params)
-    timeout = Map.get(options, :timeout, 5_000)
+    timeout = Map.get(options, :timeout, @default_timeout_ms)
 
     execute_sql(connection, final_sql, timeout)
   end
 
   def select(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.build(query, params) <> "\n FORMAT JSON"
-    timeout = Map.get(options, :timeout, 5_000)
+    timeout = Map.get(options, :timeout, @default_timeout_ms)
 
     execute_sql(connection, final_sql, timeout)
   end
@@ -43,7 +45,7 @@ defmodule Pillar do
       use GenServer
       import Supervisor.Spec
 
-      @pool_timeout_for_waiting_worker 1_000
+      @pool_timeout_for_waiting_worker 5_000
 
       defp poolboy_config do
         [

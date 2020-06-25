@@ -20,7 +20,9 @@ defmodule Pillar.Migrations.Migrate do
   def compile_migration_files do
     files = Enum.sort(File.ls!(@default_path))
 
-    Enum.map(files, fn filename ->
+    files
+    |> Enum.reject(fn filename -> filename == ".formatter.exs" end)
+    |> Enum.map(fn filename ->
       migration_path = Path.join(@default_path, filename)
       [{module, _binary}] = Code.compile_file(migration_path)
 
