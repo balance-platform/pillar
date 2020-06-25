@@ -29,7 +29,7 @@ result
 
 ### Usage with workers supervisor tree
 
-Recommended usage, becouse of limited connections and supervised workers
+Recommended usage, because of limited connections and supervised workers
 
 ```elixir
   defmodule ClickhouseMaster do
@@ -72,7 +72,7 @@ And launch this via command
 mix migrate_clickhouse
 ```
 
-### Delayed requests feature
+### Async requests feature
 
 ```elixir
   connection = Pillar.Connection.new("http://user:password@host-master-1:8123/database")
