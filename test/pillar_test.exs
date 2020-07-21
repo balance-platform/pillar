@@ -241,6 +241,23 @@ defmodule PillarTest do
               ]}
   end
 
+  test "#query/2 - max_query_size", %{conn: conn} do
+    conn1 = %Connection{conn | max_query_size: 1}
+    conn2 = %Connection{conn | max_query_size: -1}
+    conn3 = %Connection{conn | max_query_size: 1024}
+
+    assert {:error, %Pillar.HttpClient.Response{body: error1}} =
+             Pillar.query(conn1, "SELECT * FROM system.numbers LIMIT 5")
+
+    assert {:error, %Pillar.HttpClient.Response{body: error2}} =
+             Pillar.query(conn2, "SELECT * FROM system.numbers LIMIT 5")
+
+    assert {:ok, _data} = Pillar.query(conn3, "SELECT * FROM system.numbers LIMIT 5")
+
+    assert error1 =~ ~r/Max query size exceeded/
+    assert error2 =~ ~r/Unsigned type must not contain '-' symbol/
+  end
+
   test "#query/3 - select numbers", %{conn: conn} do
     assert Pillar.select(conn, "SELECT * FROM system.numbers LIMIT {limit}", %{limit: 1}) ==
              {:ok,

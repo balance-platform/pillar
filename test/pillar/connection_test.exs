@@ -9,8 +9,12 @@ defmodule Pillar.ConnectionTest do
              host: "localhost",
              user: "user",
              password: "password",
-             port: 8123
-           } == Connection.new("https://user:password@localhost:8123/some_database")
+             port: 8123,
+             max_query_size: 1024
+           } ==
+             Connection.new(
+               "https://user:password@localhost:8123/some_database?max_query_size=1024"
+             )
   end
 
   test "#new - minimum required params" do

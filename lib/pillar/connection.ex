@@ -9,14 +9,16 @@ defmodule Pillar.Connection do
           scheme: String.t(),
           password: String.t(),
           user: String.t(),
-          database: String.t()
+          database: String.t(),
+          max_query_size: integer() | nil
         }
   defstruct host: nil,
             port: nil,
             scheme: nil,
             password: nil,
             user: nil,
-            database: nil
+            database: nil,
+            max_query_size: nil
 
   @doc """
   Generates Connection from typical connection string:
@@ -38,13 +40,16 @@ defmodule Pillar.Connection do
         _str -> String.split(uri.userinfo, ":")
       end
 
+    params = URI.decode_query(uri.query || "")
+
     %__MODULE__{
       host: uri.host,
       port: uri.port,
       scheme: uri.scheme,
       database: Path.basename(uri.path || "default"),
       user: user,
-      password: password
+      password: password,
+      max_query_size: nil_or_string_to_int(params["max_query_size"])
     }
   end
 
@@ -53,7 +58,8 @@ defmodule Pillar.Connection do
       reject_nils(%{
         password: connect_config.password,
         user: connect_config.user,
-        database: connect_config.database
+        database: connect_config.database,
+        max_query_size: connect_config.max_query_size
       })
 
     uri_struct = %URI{
@@ -65,6 +71,14 @@ defmodule Pillar.Connection do
     }
 
     URI.to_string(uri_struct)
+  end
+
+  defp nil_or_string_to_int(value) do
+    if is_nil(value) do
+      nil
+    else
+      String.to_integer(value)
+    end
   end
 
   defp reject_nils(map) do
