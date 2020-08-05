@@ -92,3 +92,7 @@ def deps do
   ]
 end
 ```
+
+# Contribution
+
+Feel free to make a pull request. All contributions are appreciated!
