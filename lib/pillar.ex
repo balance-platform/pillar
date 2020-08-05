@@ -1,6 +1,6 @@
 defmodule Pillar do
-  @moduledoc """
-  """
+  @moduledoc false
+
   alias Pillar.Connection
   alias Pillar.HttpClient
   alias Pillar.QueryBuilder

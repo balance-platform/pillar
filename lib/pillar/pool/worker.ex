@@ -1,4 +1,6 @@
 defmodule Pillar.Pool.Worker do
+  @moduledoc false
+
   use GenServer
 
   def start_link(connection_string) do
