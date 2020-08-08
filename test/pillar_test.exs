@@ -164,6 +164,46 @@ defmodule PillarTest do
                Pillar.query(conn, "SELECT * FROM lc_table LIMIT 1 FORMAT JSON")
     end
 
+    test "LowCardinality(UInt8)", %{conn: conn} do
+      conn = %Pillar.Connection{conn | allow_suspicious_low_cardinality_types: true}
+
+      table_name = "lc_table_uint_8_#{@timestamp}"
+
+      create_table_sql = """
+      CREATE TABLE IF NOT EXISTS #{table_name} (field LowCardinality(UInt8)) ENGINE = Memory
+      """
+
+      insert_query_sql = """
+      INSERT INTO #{table_name} SELECT 32
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+      assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
+
+      assert {:ok, [%{"field" => 32}]} =
+               Pillar.query(conn, "SELECT * FROM #{table_name} LIMIT 1 FORMAT JSON")
+    end
+
+    test "LowCardinality(Float64)", %{conn: conn} do
+      conn = %Pillar.Connection{conn | allow_suspicious_low_cardinality_types: true}
+
+      table_name = "lc_table_float_64_#{@timestamp}"
+
+      create_table_sql = """
+      CREATE TABLE IF NOT EXISTS #{table_name} (field LowCardinality(Float64)) ENGINE = Memory
+      """
+
+      insert_query_sql = """
+      INSERT INTO #{table_name} SELECT 1994.1994
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+      assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
+
+      assert {:ok, [%{"field" => 1994.1994}]} =
+               Pillar.query(conn, "SELECT * FROM #{table_name} LIMIT 1 FORMAT JSON")
+    end
+
     test "Date test", %{conn: conn} do
       sql = "SELECT today()"
 
