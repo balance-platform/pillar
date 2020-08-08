@@ -10,14 +10,9 @@ defmodule Pillar.Migrations.MigrateTest do
     {:ok, %{conn: connection}}
   end
 
-  test "#compile_migration_files" do
-    assert Migrate.compile_migration_files() == [
-             {"1592062613_example_migration.exs", Pillar.Migrations.ExampleMigration}
-           ]
-  end
-
   test "#run_all_migrations", %{conn: conn} do
-    assert [{"1592062613_example_migration.exs", result}] = Migrate.run_all_migrations(conn)
+    assert [{"1592062613_example_migration.exs", result} | _tail] =
+             Migrate.run_all_migrations(conn)
 
     assert result in [:already_up, :migrated]
   end

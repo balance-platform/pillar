@@ -13,6 +13,7 @@ defmodule Pillar.Migrations do
   alias Pillar.Connection
   alias Pillar.Migrations.Generator
   alias Pillar.Migrations.Migrate
+  alias Pillar.Migrations.Rollback
 
   def generate(name) do
     template = Generator.migration_template(name)
@@ -26,5 +27,9 @@ defmodule Pillar.Migrations do
 
   def migrate(%Connection{} = conn) do
     Migrate.run_all_migrations(conn)
+  end
+
+  def rollback(%Connection{} = conn, count_of_migrations \\ 1) do
+    Rollback.rollback_N_migrations(conn, count_of_migrations)
   end
 end
