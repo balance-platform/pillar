@@ -37,7 +37,7 @@ defmodule Pillar do
   end
 
   defmacro __using__(
-             connection_strings: connection_strings,
+             connections: connections,
              name: name,
              pool_size: pool_size
            ) do
@@ -58,7 +58,7 @@ defmodule Pillar do
 
       def start_link(_opts \\ nil) do
         children = [
-          :poolboy.child_spec(:worker, poolboy_config(), unquote(connection_strings))
+          :poolboy.child_spec(:worker, poolboy_config(), unquote(connections))
         ]
 
         opts = [strategy: :one_for_one, name: :"#{unquote(name)}.Supervisor"]

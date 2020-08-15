@@ -15,7 +15,7 @@ defmodule PillarTest do
   describe "GenServer tests" do
     defmodule PillarWorker do
       use Pillar,
-        connection_strings: List.wrap(Application.get_env(:pillar, :connection_url)),
+        connections: List.wrap(Application.get_env(:pillar, :connection_url)),
         name: __MODULE__,
         pool_size: 3
     end
@@ -23,6 +23,26 @@ defmodule PillarTest do
     setup do
       {:ok, pid} = PillarWorker.start_link()
       {:ok, %{pid: pid}}
+    end
+
+    test "PillarWorker with Connection struct passed to initializer" do
+      defmodule PillarWorkerTest do
+        use Pillar,
+          connections: connection(),
+          name: __MODULE__,
+          pool_size: 3
+
+        def connection do
+          :pillar
+          |> Application.get_env(:connection_url)
+          |> Pillar.Connection.new()
+          |> List.wrap()
+        end
+      end
+
+      {:ok, pid} = PillarWorkerTest.start_link()
+      assert Process.alive?(pid) == true
+      assert PillarWorkerTest.query("SELECT 1 FORMAT JSON") == {:ok, [%{"1" => 1}]}
     end
 
     test "#query - without passing connection", %{pid: pid} do
