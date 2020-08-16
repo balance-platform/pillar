@@ -3,6 +3,7 @@
 Clickhouse elixir driver via HTTP connection
 
 ![build](https://github.com/CatTheMagician/pillar/workflows/build/badge.svg?branch=master)
+![hexpm](https://img.shields.io/hexpm/v/pillar.svg)
 
 ## Usage
 
@@ -78,16 +79,6 @@ mix migrate_clickhouse
     user_id: user.id,
     event: "password_changed"
   }) # => :ok
-```
-
-## Installation
-
-```elixir
-def deps do
-  [
-    {:pillar, "~> 0.15.0"}
-  ]
-end
 ```
 
 # Contribution
