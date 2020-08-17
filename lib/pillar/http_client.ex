@@ -1,6 +1,5 @@
 defmodule Pillar.HttpClient do
   @moduledoc false
-  require Logger
   alias Pillar.HttpClient.Response
   alias Pillar.HttpClient.TransportError
 
