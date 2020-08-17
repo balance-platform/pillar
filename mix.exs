@@ -5,7 +5,7 @@ defmodule Pillar.MixProject do
     [
       app: :pillar,
       aliases: aliases(),
-      version: "0.15.0",
+      version: "0.16.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -35,7 +35,7 @@ defmodule Pillar.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: []
     ]
   end
 

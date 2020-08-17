@@ -5,6 +5,14 @@ Clickhouse elixir driver via HTTP connection
 ![build](https://github.com/CatTheMagician/pillar/workflows/build/badge.svg?branch=master)
 ![hexpm](https://img.shields.io/hexpm/v/pillar.svg)
 
+# Features
+
+  - [Direct Usage with connection structure](#direct-usage-with-connection-structure)
+  - [Pool of workers](#pool-of-workers)
+  - [Async insert](#async-insert)
+  - [Buffer for periodical bulk inserts](#buffer-for-periodical-bulk-inserts)
+  - [Migrations](#migrations)
+
 ## Usage
 
 ### Direct Usage with connection structure
@@ -25,7 +33,7 @@ result
 
 ```
 
-### Usage with workers supervisor tree
+### Pool of workers
 
 Recommended usage, because of limited connections and supervised workers
 
@@ -44,6 +52,40 @@ Recommended usage, because of limited connections and supervised workers
 
   {:ok, result} = ClickhouseMaster.select(sql, %{param: value})
 ```
+
+### Async insert
+
+```elixir
+  connection = Pillar.Connection.new("http://user:password@host-master-1:8123/database")
+
+  Pillar.async_insert(connection, "INSERT INTO events (user_id, event) SELECT {user_id}, {event}", %{
+    user_id: user.id,
+    event: "password_changed"
+  }) # => :ok
+```
+
+### Buffer for periodical bulk inserts
+
+For this feature required [Pool of workers](#pool-of-workers)
+
+```elixir
+  defmodule BulkToLogs do
+    use Pillar.BulkInsertBuffer,
+      pool: ClickhouseMaster,
+      table_name: "logs",
+      interval_between_inserts_in_seconds: 5
+  end
+```
+
+```elixir
+:ok = BulkToLogs.insert(%{value: "online", count: 133, datetime: DateTime.utc_now()})
+:ok = BulkToLogs.insert(%{value: "online", count: 134, datetime: DateTime.utc_now()})
+:ok = BulkToLogs.insert(%{value: "online", count: 132, datetime: DateTime.utc_now()})
+....
+
+# all this records will be inserted with 5 second interval
+```
+
 ### Migrations
 
 Migrations can be generated with mix task `mix pillar.gen.migration migration_name`
@@ -70,16 +112,6 @@ And launch this via command
 mix migrate_clickhouse
 ```
 
-### Async requests feature
-
-```elixir
-  connection = Pillar.Connection.new("http://user:password@host-master-1:8123/database")
-
-  Pillar.async_insert(connection, "INSERT INTO events (user_id, event) SELECT {user_id}, {event}", %{
-    user_id: user.id,
-    event: "password_changed"
-  }) # => :ok
-```
 
 # Contribution
 
