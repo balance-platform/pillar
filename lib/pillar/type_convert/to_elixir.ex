@@ -44,6 +44,10 @@ defmodule Pillar.TypeConvert.ToElixir do
     value
   end
 
+  def convert("DateTime", "0000-00-00 00:00:00") do
+    nil
+  end
+
   def convert("DateTime", value) do
     {:ok, datetime, _offset} = DateTime.from_iso8601(value <> "Z")
     datetime

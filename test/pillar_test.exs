@@ -216,6 +216,21 @@ defmodule PillarTest do
       assert {:ok, [%{"now()" => %DateTime{}}]} = Pillar.select(conn, sql)
     end
 
+    test "Insert DateTime test", %{conn: conn} do
+      table_name = "datetime_test_#{@timestamp}"
+
+      create_table_sql = """
+      CREATE TABLE IF NOT EXISTS #{table_name} (field DateTime) ENGINE = Memory
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+      assert {:ok, ""} =
+               Pillar.query(conn, "INSERT INTO #{table_name} SELECT {date}", %{
+                 date: DateTime.utc_now()
+               })
+    end
+
     test "Float tests", %{conn: conn} do
       sql = ~s(
         SELECT

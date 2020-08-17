@@ -70,7 +70,7 @@ For this feature required [Pool of workers](#pool-of-workers)
 
 ```elixir
   defmodule BulkToLogs do
-    use Bulk,
+    use Pillar.BulkInsertBuffer,
       pool: ClickhouseMaster,
       table_name: "logs",
       interval_between_inserts_in_seconds: 5

@@ -1,14 +1,14 @@
-defmodule Pillar.BulkTest do
+defmodule Pillar.BulkInsertBufferTest do
   use ExUnit.Case
 
-  alias Pillar.Bulk
+  alias Pillar.BulkInsertBuffer
   alias Pillar.Connection
 
   @ts DateTime.utc_now() |> DateTime.to_unix()
   @table_name "logs_#{@ts}"
 
   defmodule BulkToLogs do
-    use Bulk,
+    use BulkInsertBuffer,
       pool: PillarTestPoolWorker,
       table_name: "logs",
       interval_between_inserts_in_seconds: 5
@@ -31,10 +31,6 @@ defmodule Pillar.BulkTest do
     {:ok, _pid} = BulkToLogs.start_link()
 
     {:ok, %{conn: connection}}
-  end
-
-  test "Returns list of expected columns" do
-    assert ["datetime", "value", "count"] = BulkToLogs.columns()
   end
 
   test "Insert function adds data to genserver state" do
@@ -98,5 +94,26 @@ defmodule Pillar.BulkTest do
     :timer.sleep(6_000)
 
     assert [] = BulkToLogs.records_for_bulk_insert()
+  end
+
+  test "#generate_insert_query/3" do
+    values = [
+      %{field_1: 1, field_2: 2, field_3: 3},
+      %{field_1: nil, field_2: 2, field_3: 4},
+      %{field_1: "1"},
+      %{field_2: 2},
+      %{field_3: 4},
+      %{}
+    ]
+
+    table_name = "example"
+
+    assert [
+             "INSERT INTO",
+             "example",
+             "FORMAT JSONEachRow",
+             "{\"field_1\":\"1\",\"field_2\":\"2\",\"field_3\":\"3\"} {\"field_2\":\"2\",\"field_3\":\"4\"} {\"field_1\":\"1\"} {\"field_2\":\"2\"} {\"field_3\":\"4\"} {}"
+           ] ==
+             String.split(BulkInsertBuffer.generate_insert_query(table_name, values), "\n")
   end
 end
