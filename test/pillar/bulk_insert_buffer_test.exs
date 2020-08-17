@@ -4,9 +4,6 @@ defmodule Pillar.BulkInsertBufferTest do
   alias Pillar.BulkInsertBuffer
   alias Pillar.Connection
 
-  @ts DateTime.utc_now() |> DateTime.to_unix()
-  @table_name "logs_#{@ts}"
-
   defmodule BulkToLogs do
     use BulkInsertBuffer,
       pool: PillarTestPoolWorker,
@@ -19,7 +16,7 @@ defmodule Pillar.BulkInsertBufferTest do
     connection = Connection.new(connection_url)
 
     create_table_sql = """
-      CREATE TABLE IF NOT EXISTS #{@table_name} (
+      CREATE TABLE IF NOT EXISTS logs (
         datetime DateTime,
         value String,
         count Int32
