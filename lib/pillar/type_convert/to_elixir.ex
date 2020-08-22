@@ -1,5 +1,6 @@
 defmodule Pillar.TypeConvert.ToElixir do
   @moduledoc false
+  @behaviour Pillar.TypeConvert.Base
 
   def convert("(" <> type_with_parenthese, value) do
     # For example (UInt64), this type returns when IF function returns NULL or Uint64

@@ -5,25 +5,26 @@ defmodule Pillar do
   alias Pillar.HttpClient
   alias Pillar.QueryBuilder
   alias Pillar.ResponseParser
+  alias Pillar.TypeConvert.ToClickhouse
 
   @default_timeout_ms 5_000
 
   def insert(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
-    final_sql = QueryBuilder.build(query, params)
+    final_sql = QueryBuilder.build(query, params, ToClickhouse)
     timeout = Map.get(options, :timeout, @default_timeout_ms)
 
     execute_sql(connection, final_sql, timeout)
   end
 
   def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
-    final_sql = QueryBuilder.build(query, params)
+    final_sql = QueryBuilder.build(query, params, ToClickhouse)
     timeout = Map.get(options, :timeout, @default_timeout_ms)
 
     execute_sql(connection, final_sql, timeout)
   end
 
   def select(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
-    final_sql = QueryBuilder.build(query, params) <> "\n FORMAT JSON"
+    final_sql = QueryBuilder.build(query, params, ToClickhouse) <> "\n FORMAT JSON"
     timeout = Map.get(options, :timeout, @default_timeout_ms)
 
     execute_sql(connection, final_sql, timeout)

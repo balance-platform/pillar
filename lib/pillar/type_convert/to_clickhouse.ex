@@ -1,5 +1,7 @@
 defmodule Pillar.TypeConvert.ToClickhouse do
   @moduledoc false
+  @behaviour Pillar.TypeConvert.Base
+
   def convert(param) when is_list(param) do
     values = Enum.map_join(param, ",", &convert/1)
 
