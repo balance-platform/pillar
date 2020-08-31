@@ -13,28 +13,22 @@ defmodule Pillar.Pool.Worker do
     {:ok, Pillar.Connection.new(connection_string)}
   end
 
-  def handle_call({:select, query, params, options}, _from, state) do
-    result = Pillar.select(state, query, params, options)
-    {:reply, result, state}
+  def handle_call({command, query, params, options}, _from, connection) do
+    result = handle_command(connection, command, query, params, options)
+    {:reply, result, connection}
   end
 
-  def handle_call({:query, query, params, options}, _from, state) do
-    result = Pillar.query(state, query, params, options)
-    {:reply, result, state}
+  def handle_cast({command, query, params, options}, connection) do
+    {:ok, _result} = handle_command(connection, command, query, params, options)
+    {:noreply, connection}
   end
 
-  def handle_call({:insert, query, params, options}, _from, state) do
-    result = Pillar.insert(state, query, params, options)
-    {:reply, result, state}
-  end
-
-  def handle_cast({:insert, query, params, options}, state) do
-    {:ok, _result} = Pillar.insert(state, query, params, options)
-    {:noreply, state}
-  end
-
-  def handle_cast({:query, query, params, options}, state) do
-    {:ok, _result} = Pillar.query(state, query, params, options)
-    {:noreply, state}
+  defp handle_command(connection, command, query, params, options)
+       when command in [:insert, :select, :query] do
+    case command do
+      :insert -> Pillar.insert(connection, query, params, options)
+      :select -> Pillar.select(connection, query, params, options)
+      :query -> Pillar.query(connection, query, params, options)
+    end
   end
 end
