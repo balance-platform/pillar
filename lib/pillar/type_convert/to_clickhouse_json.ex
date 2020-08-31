@@ -1,7 +1,7 @@
 defmodule Pillar.TypeConvert.ToClickhouseJson do
   @moduledoc false
   def convert(param) when is_list(param) do
-    Enum.map_join(param, ",", &convert/1)
+    Enum.map(param, &convert/1)
   end
 
   def convert(param) when is_integer(param) do
@@ -41,18 +41,7 @@ defmodule Pillar.TypeConvert.ToClickhouseJson do
   end
 
   def convert(param) when is_binary(param) do
-    case Jason.decode(param) do
-      {:ok, value} ->
-        if is_map(value) do
-          single_quotes_escaped = String.replace(param, "'", "''")
-          ~s('#{single_quotes_escaped}')
-        else
-          param
-        end
-
-      _any ->
-        param
-    end
+    param
   end
 
   def convert(param) do
