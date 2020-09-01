@@ -21,28 +21,7 @@ defmodule Pillar.BulkInsertBuffer do
   ```
   """
   alias Pillar.TypeConvert.ToClickhouseJson
-
-  def generate_insert_query(table_name, values) do
-    new_values = Enum.map(values, &convert_values_to_clickhouse/1)
-
-    sql_strings = [
-      "INSERT INTO",
-      table_name,
-      "FORMAT JSONEachRow",
-      Enum.join(Enum.map(new_values, &Jason.encode!/1), " ")
-    ]
-
-    Enum.join(sql_strings, "\n")
-  end
-
-  defp convert_values_to_clickhouse(map) do
-    map
-    |> Enum.reject(fn {_key, value} -> is_nil(value) end)
-    |> Enum.map(fn {key, value} ->
-      {key, ToClickhouseJson.convert(value)}
-    end)
-    |> Map.new()
-  end
+  alias Pillar.QueryBuilder
 
   defmacro __using__(
              pool: pool_module,
@@ -113,7 +92,7 @@ defmodule Pillar.BulkInsertBuffer do
       end
 
       defp do_bulk_insert({pool, table_name, records} = state) do
-        sql = BulkInsertBuffer.generate_insert_query(table_name, records)
+        sql = QueryBuilder.insert_to_table(table_name, records)
 
         {:ok, _} = pool.query(sql, %{})
 

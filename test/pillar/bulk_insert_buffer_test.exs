@@ -92,25 +92,4 @@ defmodule Pillar.BulkInsertBufferTest do
 
     assert [] = BulkToLogs.records_for_bulk_insert()
   end
-
-  test "#generate_insert_query/3" do
-    values = [
-      %{field_1: 1, field_2: 2, field_3: 3},
-      %{field_1: nil, field_2: 2, field_3: 4},
-      %{field_1: "1"},
-      %{field_2: 2},
-      %{field_3: 4},
-      %{}
-    ]
-
-    table_name = "example"
-
-    assert [
-             "INSERT INTO",
-             "example",
-             "FORMAT JSONEachRow",
-             "{\"field_1\":\"1\",\"field_2\":\"2\",\"field_3\":\"3\"} {\"field_2\":\"2\",\"field_3\":\"4\"} {\"field_1\":\"1\"} {\"field_2\":\"2\"} {\"field_3\":\"4\"} {}"
-           ] ==
-             String.split(BulkInsertBuffer.generate_insert_query(table_name, values), "\n")
-  end
 end

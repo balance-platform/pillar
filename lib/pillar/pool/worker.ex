@@ -2,7 +2,6 @@ defmodule Pillar.Pool.Worker do
   @moduledoc false
 
   use GenServer
-  @deprecated "Single inserts are deprecated in favor of bulk inserts"
 
   def start_link(connection_string) do
     GenServer.start_link(__MODULE__, connection_string)

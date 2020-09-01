@@ -320,4 +320,80 @@ defmodule PillarTest do
                 %{"number" => 0}
               ]}
   end
+
+  describe "#insert_to_table" do
+    test "bad request with unexistable fields", %{conn: conn} do
+      table_name = "to_table_inserts_with_fail_expected#{@timestamp}"
+
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS #{table_name} (
+          field1 String,
+          field2 UInt16,
+          field3 Array(UInt16)
+        ) ENGINE = Memory
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+      assert {:error, result} =
+               Pillar.insert_to_table(conn, table_name, %{
+                 field1: "Hello",
+                 field2: 0,
+                 field3: [1, 2, 3],
+                 field4: "this field doesn't exists"
+               })
+
+      assert inspect(result) =~ ~r/Unknown field found while parsing/
+    end
+
+    test "insert one record", %{conn: conn} do
+      table_name = "to_table_inserts_#{@timestamp}"
+
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS #{table_name} (
+          field1 String,
+          field2 UInt16,
+          field3 Array(UInt16)
+        ) ENGINE = Memory
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+      assert {:ok, ""} =
+               Pillar.insert_to_table(conn, table_name, %{
+                 field1: "Hello",
+                 field2: 0,
+                 field3: [1, 2, 3]
+               })
+
+      assert {:ok, [%{"field1" => "Hello", "field2" => 0, "field3" => [1, 2, 3]}]} =
+               Pillar.select(conn, "select * from #{table_name}")
+    end
+
+    test "insert multiple records", %{conn: conn} do
+      table_name = "to_table_inserts_multiple_#{@timestamp}"
+
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS #{table_name} (
+          field1 String,
+          field2 UInt16,
+          field3 Array(UInt16)
+        ) ENGINE = Memory
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+      record = %{
+        "field1" => "Hello",
+        "field2" => 0,
+        "field3" => [1, 2, 3]
+      }
+
+      assert {:ok, ""} =
+               Pillar.insert_to_table(conn, table_name, [record, record, record, record, record])
+
+      assert {:ok, [^record, ^record, ^record, ^record, ^record]} =
+               Pillar.select(conn, "select * from #{table_name}")
+    end
+  end
 end
