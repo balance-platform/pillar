@@ -30,4 +30,9 @@ defmodule Pillar.Pool.Worker do
       :query -> Pillar.query(connection, query, params, options)
     end
   end
+
+  defp handle_command(connection, command, table_name, record_or_records, options)
+       when command in [:insert_to_table] do
+    Pillar.insert_to_table(connection, table_name, record_or_records, options)
+  end
 end

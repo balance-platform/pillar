@@ -116,6 +116,30 @@ defmodule Pillar do
           @pool_timeout_for_waiting_worker
         )
       end
+
+      def insert_to_table(table_name, record_or_records \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid ->
+            GenServer.call(
+              pid,
+              {:insert_to_table, table_name, record_or_records, options},
+              :infinity
+            )
+          end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
+
+      def async_insert_to_table(table_name, record_or_records \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid ->
+            GenServer.cast(pid, {:insert_to_table, table_name, record_or_records, options})
+          end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
     end
   end
 end
