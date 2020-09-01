@@ -20,7 +20,6 @@ defmodule Pillar.BulkInsertBuffer do
   # all this records will be inserted with 5 second interval
   ```
   """
-  alias Pillar.TypeConvert.ToClickhouseJson
   alias Pillar.QueryBuilder
 
   defmacro __using__(
