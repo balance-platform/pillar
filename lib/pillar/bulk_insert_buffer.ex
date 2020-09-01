@@ -68,7 +68,7 @@ defmodule Pillar.BulkInsertBuffer do
       end
 
       def insert(data) when is_map(data) do
-        GenServer.call(unquote(__MODULE__), {:insert, data})
+        GenServer.cast(unquote(__MODULE__), {:insert, data})
       end
 
       def force_bulk_insert do
@@ -85,8 +85,8 @@ defmodule Pillar.BulkInsertBuffer do
         {:reply, :ok, new_state}
       end
 
-      def handle_call({:insert, data}, _from, {pool, table_name, records} = state) do
-        {:reply, :ok, {pool, table_name, records ++ List.wrap(data)}}
+      def handle_cast({:insert, data}, {pool, table_name, records} = state) do
+        {:noreply, {pool, table_name, records ++ List.wrap(data)}}
       end
 
       def handle_call(
