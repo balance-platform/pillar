@@ -29,7 +29,6 @@ defmodule Pillar.BulkInsertBuffer do
     quote do
       use GenServer
       import Supervisor.Spec
-      alias Pillar.QueryBuilder
 
       def start_link(_any \\ nil) do
         name = __MODULE__
@@ -90,9 +89,7 @@ defmodule Pillar.BulkInsertBuffer do
       end
 
       defp do_bulk_insert({pool, table_name, records} = state) do
-        sql = QueryBuilder.insert_to_table(table_name, records)
-
-        {:ok, _} = pool.query(sql, %{})
+        pool.async_insert_to_table(table_name, records)
 
         {
           pool,
