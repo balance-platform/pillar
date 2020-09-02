@@ -20,7 +20,6 @@ defmodule Pillar.BulkInsertBuffer do
   # all this records will be inserted with 5 second interval
   ```
   """
-  alias Pillar.QueryBuilder
 
   defmacro __using__(
              pool: pool_module,
@@ -30,10 +29,11 @@ defmodule Pillar.BulkInsertBuffer do
     quote do
       use GenServer
       import Supervisor.Spec
-      alias Pillar.BulkInsertBuffer
+      alias Pillar.QueryBuilder
 
       def start_link(_any \\ nil) do
-        name = unquote(__MODULE__)
+        name = __MODULE__
+        IO.inspect(name)
         pool = unquote(pool_module)
         table_name = unquote(table_name)
         records = []
@@ -46,15 +46,15 @@ defmodule Pillar.BulkInsertBuffer do
       end
 
       def insert(data) when is_map(data) do
-        GenServer.cast(unquote(__MODULE__), {:insert, data})
+        GenServer.cast(__MODULE__, {:insert, data})
       end
 
       def force_bulk_insert do
-        GenServer.call(unquote(__MODULE__), :do_insert)
+        GenServer.call(__MODULE__, :do_insert)
       end
 
       def records_for_bulk_insert() do
-        GenServer.call(unquote(__MODULE__), :records_for_bulk_insert)
+        GenServer.call(__MODULE__, :records_for_bulk_insert)
       end
 
       def handle_call(:do_insert, _from, state) do
