@@ -33,7 +33,6 @@ defmodule Pillar.BulkInsertBuffer do
 
       def start_link(_any \\ nil) do
         name = __MODULE__
-        IO.inspect(name)
         pool = unquote(pool_module)
         table_name = unquote(table_name)
         records = []
