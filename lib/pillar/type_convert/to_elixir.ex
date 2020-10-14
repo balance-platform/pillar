@@ -53,6 +53,10 @@ defmodule Pillar.TypeConvert.ToElixir do
     datetime
   end
 
+  def convert("Date", "0000-00-00") do
+    nil
+  end
+
   def convert("Date", value) do
     Date.from_iso8601!(value)
   end
