@@ -210,6 +210,24 @@ defmodule PillarTest do
       assert {:ok, [%{"today()" => %Date{}}]} = Pillar.select(conn, sql)
     end
 
+    test "empty Date test", %{conn: conn} do
+      table_name = "lc_table_empty_date_#{@timestamp}"
+
+      create_table_sql = """
+      CREATE TABLE IF NOT EXISTS #{table_name} (field Nullable(Date)) ENGINE = Memory
+      """
+
+      insert_query_sql = """
+      INSERT INTO #{table_name} SELECT null
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+      assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
+
+      assert {:ok, [%{"field" => nil}]} =
+               Pillar.query(conn, "SELECT * FROM #{table_name} LIMIT 1 FORMAT JSON")
+    end
+
     test "DateTime test", %{conn: conn} do
       sql = "SELECT now()"
 
