@@ -3,12 +3,12 @@ defmodule Pillar.BulkInsertBuffer do
   This module provides functionality for bulk inserts and buffering records
 
   ```elixir
-    defmodule BulkToLogs do
-      use Pillar.BulkInsertBuffer,
-        pool: ClickhouseMaster,
-        table_name: "logs",
-        interval_between_inserts_in_seconds: 5
-    end
+  defmodule BulkToLogs do
+    use Pillar.BulkInsertBuffer,
+      pool: ClickhouseMaster,
+      table_name: "logs",
+      interval_between_inserts_in_seconds: 5
+  end
   ```
 
   ```elixir
