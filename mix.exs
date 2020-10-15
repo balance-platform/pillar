@@ -1,11 +1,15 @@
 defmodule Pillar.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/CatTheMagician/pillar"
+  @version "0.18.0"
+
   def project do
     [
       app: :pillar,
+      name: "Pillar",
       aliases: aliases(),
-      version: "0.18.0",
+      version: @version,
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -21,25 +25,17 @@ defmodule Pillar.MixProject do
       dialyzer: [
         plt_add_deps: :transitive
       ],
-      source_url: "https://github.com/CatTheMagician/pillar",
-      name: "Pillar",
-      source_url: "https://github.com/CatTheMagician/pillar",
-      homepage_url: "https://github.com/CatTheMagician/pillar",
-      docs: [
-        main: "readme",
-        extras: ["README.md"]
-      ]
+      homepage_url: @source_url,
+      docs: docs()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: []
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:jason, ">= 1.0.0"},
@@ -51,11 +47,14 @@ defmodule Pillar.MixProject do
     ]
   end
 
-  defp description() do
-    "Clickhouse client"
+  defp description do
+    """
+    Elixir client for ClickHouse, a fast open-source Online Analytical
+    Processing (OLAP) database management system.
+    """
   end
 
-  defp package() do
+  defp package do
     [
       # This option is only needed when you don't want to use the OTP application name
       name: "pillar",
@@ -66,10 +65,19 @@ defmodule Pillar.MixProject do
     ]
   end
 
-  defp aliases() do
+  defp aliases do
     [
       test: ["format --check-formatted", "test"],
       check_code: ["credo", "format", "dialyzer"]
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_ref: "v#{@version}",
+      source_url: @source_url,
+      extras: ["README.md"]
     ]
   end
 end

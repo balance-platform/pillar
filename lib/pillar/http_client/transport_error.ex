@@ -1,6 +1,6 @@
 defmodule Pillar.HttpClient.TransportError do
   @moduledoc """
-  Wrap for HTTP transport errors, such as timeout and etc
+  Wrapper for HTTP transport errors, such as timeout and etc
   """
 
   defstruct [:reason]
