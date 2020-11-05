@@ -62,7 +62,7 @@ defmodule Pillar.BulkInsertBuffer do
       end
 
       def handle_cast({:insert, data}, {pool, table_name, records} = state) do
-        {:noreply, {pool, table_name, records ++ List.wrap(data)}}
+        {:noreply, {pool, table_name, List.wrap(data) ++ records}}
       end
 
       def handle_call(
@@ -70,7 +70,7 @@ defmodule Pillar.BulkInsertBuffer do
             _from,
             {_pool, _table_name, records} = state
           ) do
-        {:reply, records, state}
+        {:reply, Enum.reverse(records), state}
       end
 
       def handle_info(:cron_like_records, state) do
