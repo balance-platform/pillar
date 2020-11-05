@@ -6,6 +6,7 @@
 [![hex.pm](https://img.shields.io/hexpm/dt/pillar.svg)](https://hex.pm/packages/pillar)
 [![hex.pm](https://img.shields.io/hexpm/l/pillar.svg)](https://hex.pm/packages/pillar)
 [![github.com](https://img.shields.io/github/last-commit/CatTheMagician/pillar.svg)](https://github.com/CatTheMagician/pillar/commits/master)
+[![Coverage Status](https://coveralls.io/repos/github/UA3MQJ/pillar/badge.svg?branch=master)](https://coveralls.io/github/UA3MQJ/pillar?branch=master)
 
 Elixir client for [ClickHouse](https://clickhouse.tech/), a fast open-source
 Online Analytical Processing (OLAP) database management system.
