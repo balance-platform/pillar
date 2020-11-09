@@ -70,7 +70,7 @@ defmodule Pillar.BulkInsertBuffer do
             _from,
             {_pool, _table_name, records} = state
           ) do
-        {:reply, Enum.reverse(records), state}
+        {:reply, records, state}
       end
 
       def handle_info(:cron_like_records, state) do
