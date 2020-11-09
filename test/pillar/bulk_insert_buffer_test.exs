@@ -49,7 +49,9 @@ defmodule Pillar.BulkInsertBufferTest do
 
     assert [^r1] = BulkToLogs.records_for_bulk_insert()
     assert :ok = BulkToLogs.insert(r2)
-    assert [^r1, ^r2] = BulkToLogs.records_for_bulk_insert()
+    records_for_bulk_insert = BulkToLogs.records_for_bulk_insert()
+    assert r1 in records_for_bulk_insert
+    assert r2 in records_for_bulk_insert
   end
 
   test "Force insert" do

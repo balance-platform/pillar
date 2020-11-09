@@ -62,7 +62,7 @@ defmodule Pillar.BulkInsertBuffer do
       end
 
       def handle_cast({:insert, data}, {pool, table_name, records} = state) do
-        {:noreply, {pool, table_name, records ++ List.wrap(data)}}
+        {:noreply, {pool, table_name, List.wrap(data) ++ records}}
       end
 
       def handle_call(
