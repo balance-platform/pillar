@@ -391,7 +391,7 @@ defmodule PillarTest do
     end
 
     test "insert one record 2", %{conn: conn} do
-      table_name = "to_table_inserts_#{@timestamp}"
+      table_name = "to_table_inserts2_#{@timestamp}"
 
       create_table_sql = """
         CREATE TABLE IF NOT EXISTS #{table_name} (
