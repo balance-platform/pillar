@@ -345,6 +345,7 @@ defmodule PillarTest do
 
       create_table_sql = """
         CREATE TABLE IF NOT EXISTS #{table_name} (
+          field0 Float64,
           field1 String,
           field2 UInt16,
           field3 Array(UInt16)
@@ -355,6 +356,7 @@ defmodule PillarTest do
 
       assert {:error, result} =
                Pillar.insert_to_table(conn, table_name, %{
+                 field0: 1.1,
                  field1: "Hello",
                  field2: 0,
                  field3: [1, 2, 3],
@@ -386,6 +388,36 @@ defmodule PillarTest do
 
       assert {:ok, [%{"field1" => "Hello", "field2" => 0, "field3" => [1, 2, 3]}]} =
                Pillar.select(conn, "select * from #{table_name}")
+    end
+
+    test "insert one record 2", %{conn: conn} do
+      table_name = "to_table_inserts_#{@timestamp}"
+
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS #{table_name} (
+          field1 Float64,
+          field2 UInt16,
+          field3 Array(UInt16)
+        ) ENGINE = Memory
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+      assert {:ok, ""} =
+               Pillar.insert_to_table(conn, table_name, %{
+                 field1: 1.1e34,
+                 field2: 0,
+                 field3: [1, 2, 3]
+               })
+
+      assert {:ok, [%{"field1" => 1.1e34, "field2" => 0, "field3" => [1, 2, 3]}]} =
+               Pillar.select(conn, "select * from #{table_name}")
+    end
+
+    test "select, that includes float with e", %{conn: conn} do
+      sql = "SELECT {f} as f, {i} as i"
+
+      assert {:ok, [%{"f" => 1.1e23, "i" => 13}]} == Pillar.select(conn, sql, %{f: 1.1e23, i: 13})
     end
 
     test "insert multiple records", %{conn: conn} do
