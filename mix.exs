@@ -1,8 +1,8 @@
 defmodule Pillar.MixProject do
   use Mix.Project
 
-  @source_url "https://github.com/CatTheMagician/pillar"
-  @version "0.18.1"
+  @source_url "https://github.com/balance-platform/pillar"
+  @version "0.18.2"
 
   def project do
     [
@@ -61,7 +61,7 @@ defmodule Pillar.MixProject do
       # These are the default files included in the package
       files: ~w(lib .formatter.exs mix.exs README*),
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/CatTheMagician/pillar"}
+      links: %{"GitHub" => "https://github.com/balance-platform/pillar"}
     ]
   end
 

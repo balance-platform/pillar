@@ -1,11 +1,11 @@
 # Pillar
 
-[![github.com](https://github.com/CatTheMagician/pillar/workflows/build/badge.svg?branch=master)](https://github.com/CatTheMagician/pillar/actions)
+[![github.com](https://github.com/balance-platform/pillar/workflows/build/badge.svg?branch=master)](https://github.com/balance-platform/pillar/actions)
 [![hex.pm](https://img.shields.io/badge/docs-hexpm-blue.svg)](https://hexdocs.pm/pillar)
 [![hex.pm](https://img.shields.io/hexpm/v/pillar.svg)](https://hex.pm/packages/pillar)
 [![hex.pm](https://img.shields.io/hexpm/dt/pillar.svg)](https://hex.pm/packages/pillar)
 [![hex.pm](https://img.shields.io/hexpm/l/pillar.svg)](https://hex.pm/packages/pillar)
-[![github.com](https://img.shields.io/github/last-commit/CatTheMagician/pillar.svg)](https://github.com/CatTheMagician/pillar/commits/master)
+[![github.com](https://img.shields.io/github/last-commit/balance-platform/pillar.svg)](https://github.com/balance-platform/pillar/commits/master)
 
 Elixir client for [ClickHouse](https://clickhouse.tech/), a fast open-source
 Online Analytical Processing (OLAP) database management system.
