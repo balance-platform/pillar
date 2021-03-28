@@ -145,7 +145,7 @@ defmodule PillarTest do
       assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
 
       assert {:ok, [%{"field" => "VAL1"}]} =
-               Pillar.select(conn, "SELECT * FROM enum8_table LIMIT 1")
+               Pillar.select(conn, "SELECT * FROM enum8_table ORDER BY field LIMIT 1")
     end
 
     test "LowCardinality(String)", %{conn: conn} do
