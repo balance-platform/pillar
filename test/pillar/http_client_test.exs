@@ -5,18 +5,12 @@ defmodule Pillar.HttpClientTest do
 
   test "#post - econnrefused transport error" do
     assert %TransportError{
-             reason:
-               {:failed_connect,
-                [{:to_address, {'localhost', 1234}}, {:inet, [:inet], :econnrefused}]}
+             reason: :econnrefused
            } = HttpClient.post("http://localhost:1234")
   end
 
   test "#post - wrong scheme transport error" do
-    assert %TransportError{
-             reason:
-               {:failed_connect,
-                [{:to_address, {'localhost', 1234}}, {:inet, [:inet], :econnrefused}]}
-           } = HttpClient.post("https://localhost:1234")
+    assert %TransportError{reason: :econnrefused} = HttpClient.post("https://localhost:1234")
   end
 
   test "#post - https scheme works" do

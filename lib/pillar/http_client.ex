@@ -5,24 +5,27 @@ defmodule Pillar.HttpClient do
 
   def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
     result =
-      :httpc.request(
-        :post,
-        {String.to_charlist(url), [{'te', 'application/json'}], 'application/json', post_body},
-        options,
-        []
-      )
+      [
+        Tesla.Middleware.FollowRedirects,
+        {Tesla.Middleware.Timeout, timeout: Keyword.get(options, :timeout, 10_000)}
+      ]
+      |> Tesla.client(Tesla.Adapter.Mint)
+      |> Tesla.post(url, post_body, [])
 
     response_to_app_structure(result)
   end
 
   defp response_to_app_structure(response_tuple) do
     case response_tuple do
-      {:ok, {{_http_ver, status_code, _a_status_desc}, headers, body}} ->
+      {:ok, %Tesla.Env{status: status_code, headers: headers, body: body}} ->
         %Response{
           status_code: status_code,
           body: format_body(body),
           headers: downcase_headers_names(headers)
         }
+
+      {:error, %Mint.TransportError{reason: reason}} ->
+        %TransportError{reason: reason}
 
       {:error, reason} ->
         %TransportError{reason: reason}
@@ -36,6 +39,7 @@ defmodule Pillar.HttpClient do
     end)
   end
 
+  defp format_body(nil), do: ""
   defp format_body(data) when is_binary(data), do: data
   defp format_body(data) when is_list(data), do: IO.iodata_to_binary(data)
 end
