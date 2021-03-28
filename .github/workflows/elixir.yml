@@ -4,24 +4,25 @@ on: push
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
-    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
+    runs-on: ubuntu-18.04
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / CH ${{matrix.clickhouse}}
     services:
       clickhouse:
-        image: yandex/clickhouse-server:latest
+        image: yandex/clickhouse-server:${{matrix.clickhouse}}
         ports:
         - 8123:8123
     strategy:
       matrix:
-        otp: [21.3.8.10, 22.1.7]
-        elixir: [1.9.4, 1.10.3]
+        otp: [22.1.7, 23.1.2]
+        elixir: [1.9.4, 1.10.4, 1.11.4]
+        clickhouse: [20.3.5.21, 21.2.7.11, 'latest']
     env:
       MIX_ENV: test
       CLICKHOUSE_URL: "http://localhost:8123"
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v1.0.0
-      - uses: actions/setup-elixir@v1.0.0
+      - uses: actions/checkout@v2
+      - uses: actions/setup-elixir@v1
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
