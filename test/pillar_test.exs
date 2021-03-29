@@ -21,12 +21,11 @@ defmodule PillarTest do
     end
 
     setup do
-      {:ok, pid} = PillarWorker.start_link()
-      {:ok, %{pid: pid}}
+      PillarWorker.start_link()
+      :ok
     end
 
-    test "#query - without passing connection", %{pid: pid} do
-      assert Process.alive?(pid) == true
+    test "#query - without passing connection" do
       assert PillarWorker.query("SELECT 1 FORMAT JSON") == {:ok, [%{"1" => 1}]}
     end
 
@@ -37,12 +36,11 @@ defmodule PillarTest do
       assert inspect(reason) =~ ~r/timeout/
     end
 
-    test "#async_query", %{pid: pid} do
-      assert Process.alive?(pid) == true
+    test "#async_query" do
       assert PillarWorker.async_query("SELECT 1") == :ok
     end
 
-    test "#async_insert", %{pid: pid} do
+    test "#async_insert" do
       create_table_sql = """
         CREATE TABLE IF NOT EXISTS async_insert_test_#{@timestamp} (field FixedString(10)) ENGINE = Memory
       """
@@ -51,7 +49,6 @@ defmodule PillarTest do
         INSERT INTO async_insert_test_#{@timestamp} VALUES ('0123456789')
       """
 
-      assert Process.alive?(pid) == true
       assert PillarWorker.query(create_table_sql) == {:ok, ""}
       assert PillarWorker.async_insert(insert_query_sql) == :ok
       :timer.sleep(100)
@@ -60,7 +57,7 @@ defmodule PillarTest do
                PillarWorker.select("SELECT * FROM async_insert_test_#{@timestamp}")
     end
 
-    test "#insert with VALUES syntax", %{pid: pid} do
+    test "#insert with VALUES syntax" do
       create_table_sql = """
         CREATE TABLE IF NOT EXISTS insert_with_values_#{@timestamp} (field FixedString(10)) ENGINE = Memory
       """
@@ -69,7 +66,6 @@ defmodule PillarTest do
         INSERT INTO insert_with_values_#{@timestamp} (field) VALUES ('0123456789')
       """
 
-      assert Process.alive?(pid) == true
       assert PillarWorker.query(create_table_sql) == {:ok, ""}
       assert PillarWorker.insert(insert_query_sql) == {:ok, ""}
 
@@ -77,7 +73,7 @@ defmodule PillarTest do
                PillarWorker.select("SELECT * FROM insert_with_values_#{@timestamp}")
     end
 
-    test "#insert with SELECT syntax", %{pid: pid} do
+    test "#insert with SELECT syntax" do
       create_table_sql = """
         CREATE TABLE IF NOT EXISTS insert_with_select_#{@timestamp} (field FixedString(10)) ENGINE = Memory
       """
@@ -86,7 +82,6 @@ defmodule PillarTest do
         INSERT INTO insert_with_select_#{@timestamp} (field) SELECT '0123456789'
       """
 
-      assert Process.alive?(pid) == true
       assert PillarWorker.query(create_table_sql) == {:ok, ""}
       assert PillarWorker.insert(insert_query_sql) == {:ok, ""}
 
