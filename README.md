@@ -78,7 +78,26 @@ defmodule BulkToLogs do
   use Pillar.BulkInsertBuffer,
     pool: ClickhouseMaster,
     table_name: "logs",
-    interval_between_inserts_in_seconds: 5
+    # interval_between_inserts_in_seconds, by default -> 5
+    interval_between_inserts_in_seconds: 5,
+    # on_errors is optional
+    on_errors: &__MODULE__.dump_to_file/2
+
+  @doc """
+  dump to file handler keep storing failures inserts into file 
+  """
+  def dump_to_file(_result, records) do
+    File.write("bad_inserts/#{DateTime.utc_now()}", inspect(records))
+  end
+
+  @doc """
+  retry insert is dangerous (but it is possible and listed as proof of concept)
+
+  this function may be used in `on_errors` option
+  """
+  def retry_insert(_result, records) do
+    __MODULE__.insert(records)
+  end
 end
 ```
 
@@ -90,6 +109,9 @@ end
 
 # All this records will be inserted with 5 second interval.
 ```
+
+*on_errors* parameter allows you to catch any error of bulk insert (for example: one of batch is bad or clickhouse was not available )
+
 
 ### Migrations
 

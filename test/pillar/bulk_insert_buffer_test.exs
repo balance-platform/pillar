@@ -94,4 +94,43 @@ defmodule Pillar.BulkInsertBufferTest do
 
     assert [] = BulkToLogs.records_for_bulk_insert()
   end
+
+  describe "If bulk insert ends by error, handle function works" do
+    defmodule BulkToLogsWithErrorHandler do
+      use BulkInsertBuffer,
+        pool: PillarTestPoolWorker,
+        table_name: "logs",
+        interval_between_inserts_in_seconds: 5,
+        on_errors: &__MODULE__.dump_to_file/2
+
+      def dump_to_file(_result, records) do
+        File.write("errors_from_bulk_insert_tests", inspect(records))
+      end
+    end
+
+    test "on_errors option, dump_to_file -> saves data to file" do
+      {:ok, _pid} = BulkToLogsWithErrorHandler.start_link()
+
+      BulkToLogsWithErrorHandler.insert(%{a: "hello", b: "honey"})
+      BulkToLogsWithErrorHandler.force_bulk_insert()
+
+      assert File.read!("errors_from_bulk_insert_tests") == "[%{a: \"hello\", b: \"honey\"}]"
+
+      File.rm!("errors_from_bulk_insert_tests")
+    end
+
+    test "on_errors option, doesn't saves data, if there were no errors" do
+      {:ok, _pid} = BulkToLogsWithErrorHandler.start_link()
+
+      BulkToLogsWithErrorHandler.insert(%{
+        value: "online",
+        count: 133,
+        datetime: DateTime.utc_now()
+      })
+
+      BulkToLogsWithErrorHandler.force_bulk_insert()
+
+      assert File.exists?("errors_from_bulk_insert_tests") == false
+    end
+  end
 end

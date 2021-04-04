@@ -7,7 +7,12 @@ defmodule Pillar.BulkInsertBuffer do
     use Pillar.BulkInsertBuffer,
       pool: ClickhouseMaster,
       table_name: "logs",
-      interval_between_inserts_in_seconds: 5
+      interval_between_inserts_in_seconds: 5,
+      on_errors: &__MODULE__.dump_to_file/2
+
+    def dump_to_file(_result, records) do
+      File.write("bad_inserts/#{DateTime.utc_now()}", inspect(records))
+    end
   end
   ```
 
@@ -21,21 +26,32 @@ defmodule Pillar.BulkInsertBuffer do
   ```
   """
 
-  defmacro __using__(
-             pool: pool_module,
-             table_name: table_name,
-             interval_between_inserts_in_seconds: seconds
-           ) do
+  defmacro __using__(options) do
     quote do
       use GenServer
       import Supervisor.Spec
 
       def start_link(_any \\ nil) do
         name = __MODULE__
-        pool = unquote(pool_module)
-        table_name = unquote(table_name)
+        pool = Keyword.get(unquote(options), :pool)
+        table_name = Keyword.get(unquote(options), :table_name)
+
+        if is_nil(pool) do
+          raise "#{__MODULE__} pool is not set"
+        end
+
+        if is_nil(table_name) do
+          raise "#{__MODULE__} table_name is not set"
+        end
+
+        errors_handle_function =
+          Keyword.get(unquote(options), :on_errors, fn _any, _records -> :ok end)
+
         records = []
-        GenServer.start_link(__MODULE__, {pool, table_name, records}, name: name)
+
+        GenServer.start_link(__MODULE__, {pool, table_name, records, errors_handle_function},
+          name: name
+        )
       end
 
       def init(state) do
@@ -61,14 +77,17 @@ defmodule Pillar.BulkInsertBuffer do
         {:reply, :ok, new_state}
       end
 
-      def handle_cast({:insert, data}, {pool, table_name, records} = state) do
-        {:noreply, {pool, table_name, List.wrap(data) ++ records}}
+      def handle_cast(
+            {:insert, data},
+            {pool, table_name, records, errors_handle_function} = state
+          ) do
+        {:noreply, {pool, table_name, List.wrap(data) ++ records, errors_handle_function}}
       end
 
       def handle_call(
             :records_for_bulk_insert,
             _from,
-            {_pool, _table_name, records} = state
+            {_pool, _table_name, records, _errors_handle_function} = state
           ) do
         {:reply, records, state}
       end
@@ -80,21 +99,29 @@ defmodule Pillar.BulkInsertBuffer do
       end
 
       defp schedule_work do
-        seconds = unquote(seconds)
+        # 5 seconds by default
+        seconds = Keyword.get(unquote(options), :interval_between_inserts_in_seconds, 5)
         Process.send_after(self(), :cron_like_records, :timer.seconds(seconds))
       end
 
-      defp do_bulk_insert({_pool, _table_name, []} = state) do
+      defp do_bulk_insert({_pool, _table_name, [], _error_handle_function} = state) do
         state
       end
 
-      defp do_bulk_insert({pool, table_name, records} = state) do
-        pool.async_insert_to_table(table_name, records)
+      defp do_bulk_insert({pool, table_name, records, error_handle_function} = state) do
+        result = pool.insert_to_table(table_name, records)
 
+        case result do
+          {:error, _reason} -> error_handle_function.(result, records)
+          _another -> nil
+        end
+
+        # Build state back, without records
         {
           pool,
           table_name,
-          []
+          [],
+          error_handle_function
         }
       end
     end
