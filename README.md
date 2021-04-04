@@ -84,7 +84,7 @@ defmodule BulkToLogs do
     on_errors: &__MODULE__.dump_to_file/2
 
   @doc """
-  dump to file handler keep storing failures inserts into file 
+  dump to file function store failed inserts into file 
   """
   def dump_to_file(_result, records) do
     File.write("bad_inserts/#{DateTime.utc_now()}", inspect(records))
