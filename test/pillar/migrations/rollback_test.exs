@@ -14,24 +14,24 @@ defmodule Pillar.Migrations.RollbackTest do
     {:ok, %{conn: connection}}
   end
 
-  test "#rollback_N_migrations", %{conn: conn} do
+  test "#rollback_n_migrations", %{conn: conn} do
     result = Rollback.list_of_success_migrations(conn)
     assert length(result) == 3
 
     # Nothing rollback
-    assert Rollback.rollback_N_migrations(conn, 0) == []
+    assert Rollback.rollback_n_migrations(conn, 0) == []
 
     # List of rolled back migrations
-    assert [_migration_file] = Rollback.rollback_N_migrations(conn, 1)
+    assert [_migration_file] = Rollback.rollback_n_migrations(conn, 1)
 
     # List of rolled back migrations, + wait until Clickhouse updates table
-    :timer.sleep(1_000)
-    assert [_migration_file1, _migration_file2] = Rollback.rollback_N_migrations(conn, 2)
+    :timer.sleep(3_000)
+    assert [_migration_file1, _migration_file2] = Rollback.rollback_n_migrations(conn, 2)
 
     # Migrations left, + wait until Clickhouse updates table
     :timer.sleep(1_000)
     result = Rollback.list_of_success_migrations(conn)
-    assert length(result) == 0
+    assert Enum.empty?(result)
 
     # Checks, that tables are deleted
     assert {:error, %Response{body: body}} =

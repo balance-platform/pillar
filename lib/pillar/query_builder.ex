@@ -4,11 +4,18 @@ defmodule Pillar.QueryBuilder do
   alias Pillar.TypeConvert.ToClickhouseJson
 
   def query(query, params) when is_map(params) do
-    original_query = query
+    case Enum.empty?(params) do
+      true ->
+        query
 
-    Enum.reduce(params, original_query, fn {param_name, value}, query_with_params ->
-      String.replace(query_with_params, "{#{param_name}}", ToClickhouse.convert(value))
-    end)
+      false ->
+        original_query = query
+        prepare_params = Enum.map(params, fn {k, v} -> {"{#{k}}", v} end) |> Enum.into(%{})
+
+        String.replace(original_query, Map.keys(prepare_params), fn pattern ->
+          ToClickhouse.convert(prepare_params[pattern])
+        end)
+    end
   end
 
   def insert_to_table(table_name, record) when is_map(record) do

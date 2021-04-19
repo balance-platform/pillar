@@ -90,6 +90,30 @@ defmodule PillarTest do
     end
   end
 
+  describe "injection tests" do
+    test "@LamaLover (Thanks for example)", %{conn: conn} do
+      assert {:ok, [%{"'(SELECT {primary} from table)'" => "(SELECT {primary} from table)"}]} ==
+               Pillar.select(conn, "select {a00}", %{
+                 a00: "(SELECT {primary} from table)",
+                 primary: "id"
+               })
+    end
+
+    test "-- comment string", %{conn: conn} do
+      # In success injection result should equal 2, but if returns string '--\n2', then injection failed
+      assert {:ok, [%{"res" => "--\n2"}]} ==
+               Pillar.select(conn, "select\n{a00} as res", %{
+                 a00: "--\n2"
+               })
+    end
+
+    test "; with new query", %{conn: conn} do
+      # In success injection result should equal 3, and column == INJECTED, but if returns string res, then injection failed
+      assert {:ok, [%{"res" => "'; SELECT 3 as INJECTED"}]} ==
+               Pillar.select(conn, "select {arg} as res", %{arg: "'; SELECT 3 as INJECTED"})
+    end
+  end
+
   describe "data types tests" do
     test "UUID test", %{conn: conn} do
       assert {:ok, [%{"uuid" => uuid}]} = Pillar.select(conn, "SELECT generateUUIDv4() as uuid")

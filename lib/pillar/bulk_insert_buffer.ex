@@ -77,13 +77,13 @@ defmodule Pillar.BulkInsertBuffer do
         {:reply, :ok, new_state}
       end
 
-      def handle_cast({:insert, nil}, state) do
+      def handle_cast({:insert, nil = _data}, state) do
         {:noreply, state}
       end
 
       def handle_cast(
             {:insert, data},
-            {pool, table_name, records, errors_handle_function}
+            {pool, table_name, records, errors_handle_function} = _state
           ) do
         {:noreply, {pool, table_name, [data | records], errors_handle_function}}
       end

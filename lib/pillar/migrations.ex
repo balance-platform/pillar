@@ -30,6 +30,6 @@ defmodule Pillar.Migrations do
   end
 
   def rollback(%Connection{} = conn, count_of_migrations \\ 1) do
-    Rollback.rollback_N_migrations(conn, count_of_migrations)
+    Rollback.rollback_n_migrations(conn, count_of_migrations)
   end
 end
