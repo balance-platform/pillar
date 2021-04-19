@@ -411,6 +411,26 @@ defmodule PillarTest do
                Pillar.select(conn, "select * from #{table_name}")
     end
 
+    test "insert one record with array of nullable type", %{conn: conn} do
+      table_name = "to_table_inserts_array_of_nullable_#{@timestamp}"
+
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS #{table_name} (
+          field Array(Nullable(UInt16))
+        ) ENGINE = Memory
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+      assert {:ok, ""} =
+               Pillar.insert_to_table(conn, table_name, %{
+                 field: [nil, 2, 3]
+               })
+
+      assert {:ok, [%{"field" => [nil, 2, 3]}]} =
+               Pillar.select(conn, "select * from #{table_name}")
+    end
+
     test "select, that includes float with e", %{conn: conn} do
       sql = "SELECT {f} as f, {i} as i"
 

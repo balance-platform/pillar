@@ -15,6 +15,8 @@ defmodule Pillar.TypeConvert.ToClickhouseJson do
     end
   end
 
+  def convert(nil), do: nil
+
   def convert(param) when is_atom(param) do
     Atom.to_string(param)
   end
