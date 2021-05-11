@@ -7,7 +7,8 @@ defmodule Pillar.Migrations.Base do
   alias Pillar.Connection
 
   def compile_migration_files do
-    files = Enum.sort(File.ls!(@default_path))
+    base_path = Application.app_dir(:pillar, migrations_path())
+    files = Enum.sort(File.ls!(base_path))
 
     files
     |> Enum.reject(fn filename -> filename == ".formatter.exs" end)
@@ -17,7 +18,7 @@ defmodule Pillar.Migrations.Base do
       if Kernel.function_exported?(module_name, :up, 0) do
         {filename, module_name}
       else
-        migration_path = Path.join(@default_path, filename)
+        migration_path = Path.join(base_path, filename)
         [{module, _binary}] = Code.compile_file(migration_path)
 
         {filename, module}
@@ -26,7 +27,7 @@ defmodule Pillar.Migrations.Base do
   end
 
   def migrations_path do
-    @default_path
+    Application.get_env(:pillar, :migrations_path, @default_path)
   end
 
   def create_migration_history_table(%Connection{} = connection) do

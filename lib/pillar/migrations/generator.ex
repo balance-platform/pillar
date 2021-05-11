@@ -3,7 +3,7 @@ defmodule Pillar.Migrations.Generator do
   Migration generator, used at Mix.Tasks
   """
 
-  @default_path "priv/pillar_migrations"
+  import Pillar.Migrations.Base, only: [migrations_path: 0]
 
   def migration_template(name) do
     """
@@ -23,6 +23,6 @@ defmodule Pillar.Migrations.Generator do
     unix_timestamp = DateTime.to_unix(DateTime.utc_now())
 
     module_name = String.downcase(name)
-    Path.join([@default_path, "#{unix_timestamp}_#{module_name}.exs"])
+    Path.join([migrations_path(), "#{unix_timestamp}_#{module_name}.exs"])
   end
 end
