@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Pillar.Gen.Migration do
   ```
   """
   use Mix.Task
-  alias Pillar.Migrations
+  alias Pillar.Migrations.Default, as: Migrations
 
   @impl Mix.Task
   def run([name]) do

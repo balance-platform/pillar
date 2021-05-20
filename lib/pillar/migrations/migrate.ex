@@ -5,10 +5,10 @@ defmodule Pillar.Migrations.Migrate do
   alias Pillar.Connection
   alias Pillar.Migrations.Base
 
-  def run_all_migrations(%Connection{} = connection) do
+  def run_all_migrations(%Connection{} = connection, path) do
     :ok = Base.create_migration_history_table(connection)
 
-    files_and_modules = Base.compile_migration_files()
+    files_and_modules = Base.compile_migration_files(path)
 
     Enum.map(files_and_modules, fn {filename, module} ->
       result = migrate_if_was_not_migrated(connection, filename, module.up)
