@@ -1,6 +1,6 @@
 defmodule Pillar.MigrationsTest do
   use ExUnit.Case
-  alias Pillar.Migrations.Default, as: Migrations
+  alias Pillar.Migrations
 
   test "#generate" do
     assert filename = Migrations.generate("test_migration")

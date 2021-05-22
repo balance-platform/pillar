@@ -1,6 +1,6 @@
 defmodule Pillar.Migrations.RollbackTest do
   use ExUnit.Case
-  alias Pillar.Migrations.Default, as: Migrations
+  alias Pillar.Migrations
   alias Pillar.Migrations.Rollback
   alias Pillar.Connection
   alias Pillar.HttpClient.Response
