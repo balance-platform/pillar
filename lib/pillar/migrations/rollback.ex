@@ -5,10 +5,10 @@ defmodule Pillar.Migrations.Rollback do
   alias Pillar.Connection
   alias Pillar.Migrations.Base
 
-  def rollback_n_migrations(%Connection{} = connection, rollback_count) do
+  def rollback_n_migrations(%Connection{} = connection, path, rollback_count) do
     :ok = Base.create_migration_history_table(connection)
 
-    files_and_modules = Base.compile_migration_files()
+    files_and_modules = Base.compile_migration_files(path)
 
     migrations_for_rollback =
       connection
