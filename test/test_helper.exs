@@ -1,10 +1,22 @@
 ExUnit.start()
 
-defmodule PillarTestPoolWorker do
+defmodule PillarTestPoolWorkerTM do
+  @url Application.get_env(:pillar, :connection_url)
+
   use Pillar,
-    connection_strings: List.wrap(Application.get_env(:pillar, :connection_url)),
+    connections: List.wrap(Pillar.Connection.new(@url, Pillar.HttpClient.TeslaMintAdapter)),
     name: __MODULE__,
     pool_size: 3
 end
 
-PillarTestPoolWorker.start_link()
+defmodule PillarTestPoolWorkerHC do
+  @url Application.get_env(:pillar, :connection_url)
+
+  use Pillar,
+    connections: List.wrap(Pillar.Connection.new(@url, Pillar.HttpClient.HttpcAdapter)),
+    name: __MODULE__,
+    pool_size: 3
+end
+
+PillarTestPoolWorkerTM.start_link()
+PillarTestPoolWorkerHC.start_link()

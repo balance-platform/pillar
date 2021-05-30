@@ -3,17 +3,23 @@ defmodule Pillar.Migrations.MigrateTest do
   alias Pillar.Migrations.Migrate
   alias Pillar.Connection
 
-  setup do
-    connection_url = Application.get_env(:pillar, :connection_url)
-    connection = Connection.new(connection_url)
+  alias Pillar.HttpClient.HttpcAdapter
+  alias Pillar.HttpClient.TeslaMintAdapter
 
-    {:ok, %{conn: connection}}
-  end
+  for adapter <- [HttpcAdapter, TeslaMintAdapter] do
+    @adapter adapter
+    setup do
+      connection_url = Application.get_env(:pillar, :connection_url)
+      connection = Connection.new(connection_url, @adapter)
 
-  test "#run_all_migrations", %{conn: conn} do
-    assert [{"1592062613_example_migration.exs", result} | _tail] =
-             Migrate.run_all_migrations(conn)
+      {:ok, %{conn: connection}}
+    end
 
-    assert result in [:already_up, :migrated]
+    test "#{adapter} #run_all_migrations", %{conn: conn} do
+      assert [{"1592062613_example_migration.exs", result} | _tail] =
+               Migrate.run_all_migrations(conn)
+
+      assert result in [:already_up, :migrated]
+    end
   end
 end

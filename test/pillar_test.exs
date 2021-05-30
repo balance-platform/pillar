@@ -7,7 +7,7 @@ defmodule PillarTest do
 
   setup do
     connection_url = Application.get_env(:pillar, :connection_url)
-    connection = Connection.new(connection_url)
+    connection = Connection.new(connection_url, Pillar.HttpClient.HttpcAdapter)
 
     {:ok, %{conn: connection}}
   end
@@ -15,7 +15,13 @@ defmodule PillarTest do
   describe "GenServer tests" do
     defmodule PillarWorker do
       use Pillar,
-        connection_strings: List.wrap(Application.get_env(:pillar, :connection_url)),
+        connections:
+          List.wrap(
+            Pillar.Connection.new(
+              Application.get_env(:pillar, :connection_url),
+              Pillar.HttpClient.HttpcAdapter
+            )
+          ),
         name: __MODULE__,
         pool_size: 3
     end

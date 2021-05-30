@@ -3,21 +3,34 @@ defmodule Pillar.HttpClientTest do
   alias Pillar.HttpClient.TransportError
   use ExUnit.Case
 
-  test "#post - econnrefused transport error" do
-    assert %TransportError{
-             reason: :econnrefused
-           } = HttpClient.post("http://localhost:1234")
-  end
+  alias Pillar.HttpClient.HttpcAdapter
+  alias Pillar.HttpClient.TeslaMintAdapter
 
-  test "#post - wrong scheme transport error" do
-    assert %TransportError{reason: :econnrefused} = HttpClient.post("https://localhost:1234")
-  end
+  for adapter <- [HttpcAdapter, TeslaMintAdapter] do
+    @adapter adapter
 
-  test "#post - https scheme works" do
-    assert %HttpClient.Response{} = HttpClient.post("https://www.google.com")
-  end
+    test "#{adapter} #post - econnrefused transport error" do
+      assert %TransportError{
+               reason: econnrefused_error
+             } = HttpClient.post(@adapter, "http://localhost:1234")
 
-  test "#post - binary data test" do
-    assert %HttpClient.Response{} = HttpClient.post("https://www.google.com/favicon.ico")
+      assert inspect(econnrefused_error) =~ "econnrefused"
+    end
+
+    test "#{adapter} #post - wrong scheme transport error" do
+      assert %TransportError{reason: econnrefused_error} =
+               HttpClient.post(@adapter, "https://localhost:1234")
+
+      assert inspect(econnrefused_error) =~ "econnrefused"
+    end
+
+    test "#{adapter} #post - https scheme works" do
+      assert %HttpClient.Response{} = HttpClient.post(@adapter, "https://www.google.com")
+    end
+
+    test "#{adapter} #post - binary data test" do
+      assert %HttpClient.Response{} =
+               HttpClient.post(@adapter, "https://www.google.com/favicon.ico")
+    end
   end
 end

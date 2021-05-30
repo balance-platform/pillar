@@ -37,15 +37,16 @@ defmodule Pillar do
     execute_sql(connection, final_sql, timeout)
   end
 
-  defp execute_sql(connection, final_sql, timeout) do
-    connection
-    |> Connection.url_from_connection()
-    |> HttpClient.post(final_sql, timeout: timeout)
+  defp execute_sql(%Connection{http_adapter: adapter} = connection, final_sql, timeout) do
+    url = Connection.url_from_connection(connection)
+
+    adapter
+    |> HttpClient.post(url, final_sql, timeout: timeout)
     |> ResponseParser.parse()
   end
 
   defmacro __using__(
-             connection_strings: connection_strings,
+             connections: connections,
              name: name,
              pool_size: pool_size
            ) do
@@ -66,7 +67,7 @@ defmodule Pillar do
 
       def start_link(_opts \\ nil) do
         children = [
-          :poolboy.child_spec(:worker, poolboy_config(), unquote(connection_strings))
+          :poolboy.child_spec(:worker, poolboy_config(), unquote(connections))
         ]
 
         opts = [strategy: :one_for_one, name: :"#{unquote(name)}.Supervisor"]

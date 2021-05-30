@@ -3,13 +3,13 @@ defmodule Pillar.Pool.Worker do
 
   use GenServer
 
-  def start_link(connection_string) do
-    GenServer.start_link(__MODULE__, connection_string)
+  def start_link(connections) do
+    GenServer.start_link(__MODULE__, connections)
   end
 
-  def init(connection_string_list) when is_list(connection_string_list) do
-    connection_string = Enum.random(connection_string_list)
-    {:ok, Pillar.Connection.new(connection_string)}
+  def init(connections) when is_list(connections) do
+    connection = Enum.random(connections)
+    {:ok, connection}
   end
 
   def handle_call({command, query, params, options}, _from, connection) do

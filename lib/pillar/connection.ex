@@ -16,7 +16,8 @@ defmodule Pillar.Connection do
           user: String.t(),
           database: String.t(),
           max_query_size: integer() | nil,
-          allow_suspicious_low_cardinality_types: boolean() | nil
+          allow_suspicious_low_cardinality_types: boolean() | nil,
+          http_adapter: module() | nil
         }
   defstruct host: nil,
             port: nil,
@@ -25,20 +26,21 @@ defmodule Pillar.Connection do
             user: nil,
             database: nil,
             max_query_size: nil,
-            allow_suspicious_low_cardinality_types: nil
+            allow_suspicious_low_cardinality_types: nil,
+            http_adapter: nil
 
   @doc """
   Generates Connection from typical connection string:
 
   ```
-  %Pillar.Connection{} = Pillar.Connection.new("https://user:password@localhost:8123/some_database")
+  %Pillar.Connection{} = Pillar.Connection.new("https://user:password@localhost:8123/some_database", Pillar.HttpClient.TeslaMintAdapter)
 
   # in this case "default" database is used
-  %Pillar.Connection{} = Pillar.Connection.new("https://localhost:8123")
+  %Pillar.Connection{} = Pillar.Connection.new("https://localhost:8123", Pillar.HttpClient.TeslaMintAdapter)
   ```
   """
-  @spec new(String.t()) :: Pillar.Connection.t()
-  def new(str) do
+  @spec new(String.t(), module()) :: Pillar.Connection.t()
+  def new(str, adapter) do
     uri = URI.parse(str)
 
     [user, password] =
@@ -56,7 +58,8 @@ defmodule Pillar.Connection do
       database: Path.basename(uri.path || "default"),
       user: user,
       password: password,
-      max_query_size: nil_or_string_to_int(params["max_query_size"])
+      max_query_size: nil_or_string_to_int(params["max_query_size"]),
+      http_adapter: adapter
     }
   end
 

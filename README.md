@@ -12,6 +12,7 @@ Online Analytical Processing (OLAP) database management system.
 
 # Features
 
+  - [HTTP Adapter configuration](#http-adapter-configuration)
   - [Direct Usage with connection structure](#direct-usage-with-connection-structure)
   - [Pool of workers](#pool-of-workers)
   - [Async insert](#async-insert)
@@ -20,10 +21,18 @@ Online Analytical Processing (OLAP) database management system.
 
 ## Usage
 
+### HTTP adapter configuration
+
+Out of the box Pillar supports erlang :httpc client by `Pillar.HttpClient.HttpcAdapter`
+
+And [Tesla Mint](https://github.com/teamon/tesla)  client by `Pillar.HttpClient.TeslaMintAdapter`
+
+Adapter should be passed in `Connection.new/2`, that's allow to create user's defined adapter for any http client which you loves <3
+
 ### Direct Usage with connection structure
 
 ```elixir
-conn = Pillar.Connection.new("http://user:password@localhost:8123/database")
+conn = Pillar.Connection.new("http://user:password@localhost:8123/database", Pillar.HttpClient.HttpcAdapter))
 
 # Params are passed in brackets {} in SQL query, and map strtucture does fill
 # query by values.
@@ -45,9 +54,9 @@ Recommended usage, because of limited connections and supervised workers.
 ```elixir
 defmodule ClickhouseMaster do
   use Pillar,
-    connection_strings: [
-      "http://user:password@host-master-1:8123/database",
-      "http://user:password@host-master-2:8123/database"
+    connections: [
+      Pillar.Connection.new("http://user:password@host-master-1:8123/database", Pillar.HttpClient.HttpcAdapter)
+      Pillar.Connection.new("http://user:password@host-master-2:8123/database", Pillar.HttpClient.HttpcAdapter)
     ],
     name: __MODULE__,
     pool_size: 15
@@ -61,7 +70,7 @@ ClickhouseMaster.start_link()
 ### Async insert
 
 ```elixir
-connection = Pillar.Connection.new("http://user:password@host-master-1:8123/database")
+connection = Pillar.Connection.new("http://user:password@host-master-1:8123/database", Pillar.HttpClient.HttpcAdapter)
 
 Pillar.async_insert(connection, "INSERT INTO events (user_id, event) SELECT {user_id}, {event}", %{
   user_id: user.id,
@@ -129,7 +138,7 @@ defmodule Mix.Tasks.MigrateClickhouse do
   use Mix.Task
   def run(_args) do
     connection_string = Application.get_env(:my_project, :clickhouse_url)
-    conn = Pillar.Connection.new(connection_string)
+    conn = Pillar.Connection.new(connection_string, Pillar.HttpClient.HttpcAdapter)
     Pillar.Migrations.migrate(conn)
   end
 end

@@ -6,14 +6,14 @@ defmodule Pillar.BulkInsertBufferTest do
 
   defmodule BulkToLogs do
     use BulkInsertBuffer,
-      pool: PillarTestPoolWorker,
+      pool: PillarTestPoolWorkerTM,
       table_name: "logs",
       interval_between_inserts_in_seconds: 5
   end
 
   setup do
     connection_url = Application.get_env(:pillar, :connection_url)
-    connection = Connection.new(connection_url)
+    connection = Connection.new(connection_url, Pillar.HttpClient.TeslaMintAdapter)
 
     create_table_sql = """
       CREATE TABLE IF NOT EXISTS logs (
@@ -98,7 +98,7 @@ defmodule Pillar.BulkInsertBufferTest do
   describe "If bulk insert ends by error, handle function works" do
     defmodule BulkToLogsWithErrorHandler do
       use BulkInsertBuffer,
-        pool: PillarTestPoolWorker,
+        pool: PillarTestPoolWorkerTM,
         table_name: "logs",
         interval_between_inserts_in_seconds: 5,
         on_errors: &__MODULE__.dump_to_file/2
