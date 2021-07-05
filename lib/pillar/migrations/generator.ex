@@ -5,7 +5,7 @@ defmodule Pillar.Migrations.Generator do
 
   def migration_template(name) do
     """
-    defmodule Pillar.Migrations.#{String.capitalize(name)} do
+    defmodule Pillar.Migrations.#{Macro.camelize(name)} do
       def up do
         "CREATE TABLE example (field FixedString(10)) ENGINE = Memory"
       end
