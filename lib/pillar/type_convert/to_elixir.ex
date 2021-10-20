@@ -91,7 +91,7 @@ defmodule Pillar.TypeConvert.ToElixir do
     value
   end
 
-  def convert("Decimal" <> _enum_values, value) do
+  def convert("Decimal" <> _decimal_subtypes, value) do
     value
   end
 end
