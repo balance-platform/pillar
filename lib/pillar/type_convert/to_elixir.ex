@@ -90,4 +90,8 @@ defmodule Pillar.TypeConvert.ToElixir do
            ] and is_number(value) do
     value
   end
+
+  def convert("Decimal" <> _decimal_subtypes, value) do
+    value
+  end
 end
