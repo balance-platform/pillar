@@ -270,6 +270,22 @@ defmodule PillarTest do
                })
     end
 
+    test "Decimal test", %{conn: conn} do
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS decimal_table (field Decimal64(2)) ENGINE = Memory
+      """
+
+      insert_query_sql = """
+        INSERT INTO decimal_table VALUES (500000.05)
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+      assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
+
+      assert {:ok, [%{"field" => 500_000.05}]} =
+               Pillar.select(conn, "SELECT * FROM decimal_table LIMIT 1")
+    end
+
     test "Float tests", %{conn: conn} do
       sql = ~s(
         SELECT
