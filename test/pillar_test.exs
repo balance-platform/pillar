@@ -108,7 +108,7 @@ defmodule PillarTest do
 
     test "Float tests", %{conn: conn} do
       sql = ~s(
-        SELECT 
+        SELECT
           -127.0 Float32,
           -92233720368.31 Float64
       )
@@ -119,7 +119,7 @@ defmodule PillarTest do
 
     test "Integer tests", %{conn: conn} do
       sql = ~s(
-        SELECT 
+        SELECT
           -127 Int8,
           -32768 Int16,
           -2147483648 Int32,
@@ -165,5 +165,13 @@ defmodule PillarTest do
               [
                 %{"number" => 0}
               ]}
+  end
+
+  test "IP tests", %{conn: conn} do
+    sql =
+      "SELECT toIPv4('1.1.1.1') as ip4, toIPv6('2001:db8::8a2e:370:7334') as ip6, toIPv4('2.2.2.2') == toIPv4({ip}) as matches"
+
+    assert {:ok, [%{"ip4" => "1.1.1.1", "ip6" => "2001:db8::8a2e:370:7334", "matches" => true}]} =
+             Pillar.query(conn, sql, %{ip: {2, 2, 2, 2}})
   end
 end
