@@ -68,7 +68,8 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
     end
 
     test "IPv6" do
-      assert ToClickhouse.convert({8193, 3512, 0, 0, 0, 35374, 880, 29492}) == "'2001:db8::8a2e:370:7334'"
+      assert ToClickhouse.convert({8193, 3512, 0, 0, 0, 35374, 880, 29492}) ==
+               "'2001:db8::8a2e:370:7334'"
     end
   end
 end
