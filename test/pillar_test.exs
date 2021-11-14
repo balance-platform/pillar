@@ -376,7 +376,15 @@ defmodule PillarTest do
               ]}
   end
 
-  describe "#insert_to_table" do
+  test "IP tests", %{conn: conn} do
+    sql =
+      "SELECT toIPv4('1.1.1.1') as ip4, toIPv6('2001:db8::8a2e:370:7334') as ip6, toIPv4('2.2.2.2') == toIPv4({ip}) as matches"
+
+    assert {:ok, [%{"ip4" => "1.1.1.1", "ip6" => "2001:db8::8a2e:370:7334", "matches" => true}]} =
+             Pillar.query(conn, sql, %{ip: {2, 2, 2, 2}})
+  end
+end
+describe "#insert_to_table" do
     test "bad request with unexistable fields", %{conn: conn} do
       table_name = "to_table_inserts_with_fail_expected#{@timestamp}"
 

@@ -63,6 +63,14 @@ defmodule Pillar.TypeConvert.ToElixir do
     Date.from_iso8601!(value)
   end
 
+  def convert("IPv4", value) do
+    value
+  end
+
+  def convert("IPv6", value) do
+    value
+  end
+
   def convert(clickhouse_type, value)
       when clickhouse_type in [
              "Int64",
