@@ -1,10 +1,15 @@
 defmodule Pillar.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/balance-platform/pillar"
+  @version "0.24.0"
+
   def project do
     [
       app: :pillar,
-      version: "0.8.1",
+      name: "Pillar",
+      aliases: aliases(),
+      version: @version,
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -20,48 +25,62 @@ defmodule Pillar.MixProject do
       dialyzer: [
         plt_add_deps: :transitive
       ],
-      source_url: "https://github.com/sofakingworld/pillar",
-      name: "Pillar",
-      source_url: "https://github.com/sofakingworld/pillar",
-      homepage_url: "https://github.com/sofakingworld/pillar",
-      docs: [
-        main: "readme",
-        extras: ["README.md"]
-      ]
+      homepage_url: @source_url,
+      docs: docs()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: []
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:jason, ">= 1.0.0"},
-      {:poolboy, "~> 1.5.1"},
+      {:tesla, "~> 1.4.0"},
+      {:mint, "~> 1.0"},
+      {:castore, "~> 0.1"},
+      {:poolboy, "~> 1.5"},
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.12.2", only: :test},
-      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev, :test], runtime: false}
+      {:ex_doc, "~> 0.21", only: [:dev], runtime: false},
+      {:excoveralls, "~> 0.12.2", only: [:test], runtime: false}
     ]
   end
 
-  defp description() do
-    "Clickhouse client"
+  defp description do
+    """
+    Elixir client for ClickHouse, a fast open-source Online Analytical
+    Processing (OLAP) database management system.
+    """
   end
 
-  defp package() do
+  defp package do
     [
       # This option is only needed when you don't want to use the OTP application name
       name: "pillar",
       # These are the default files included in the package
       files: ~w(lib .formatter.exs mix.exs README*),
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/sofakingworld/pillar"}
+      links: %{"GitHub" => "https://github.com/balance-platform/pillar"}
+    ]
+  end
+
+  defp aliases do
+    [
+      test: ["format --check-formatted", "test"],
+      check_code: ["credo", "format", "dialyzer"]
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_ref: "v#{@version}",
+      source_url: @source_url,
+      extras: ["README.md"]
     ]
   end
 end

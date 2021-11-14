@@ -7,6 +7,10 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
       assert ToClickhouse.convert(:error) == "error"
     end
 
+    test "Float" do
+      assert ToClickhouse.convert(2.35) == "2.35"
+    end
+
     test "nil" do
       assert ToClickhouse.convert(nil) == "NULL"
     end

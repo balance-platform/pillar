@@ -1,11 +1,27 @@
 defmodule Pillar.TypeConvert.ToElixir do
   @moduledoc false
+
+  def convert("(" <> type_with_parenthese, value) do
+    # For example (UInt64), this type returns when IF function returns NULL or Uint64
+    # SELECT IF(1 == 2, NULL, 64)
+    {type, ")"} = String.split_at(type_with_parenthese, -1)
+    convert(type, value)
+  end
+
   def convert("String", value) do
     value
   end
 
+  def convert("LowCardinality" <> type, value) do
+    convert(type, value)
+  end
+
   def convert("UUID", value) do
     value
+  end
+
+  def convert("FixedString" <> _size, value) when is_binary(value) do
+    String.Chars.to_string(value)
   end
 
   def convert("FixedString" <> _size, value) do
@@ -28,9 +44,19 @@ defmodule Pillar.TypeConvert.ToElixir do
     value
   end
 
+  def convert("DateTime", "0000-00-00 00:00:00") do
+    nil
+  end
+
+  def convert("DateTime64(3)", value), do: convert("DateTime", value)
+
   def convert("DateTime", value) do
     {:ok, datetime, _offset} = DateTime.from_iso8601(value <> "Z")
     datetime
+  end
+
+  def convert("Date", "0000-00-00") do
+    nil
   end
 
   def convert("Date", value) do
@@ -70,6 +96,10 @@ defmodule Pillar.TypeConvert.ToElixir do
              "Float32",
              "Float64"
            ] and is_number(value) do
+    value
+  end
+
+  def convert("Decimal" <> _decimal_subtypes, value) do
     value
   end
 end

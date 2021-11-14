@@ -1,4 +1,6 @@
 defmodule Pillar.Pool.Worker do
+  @moduledoc false
+
   use GenServer
 
   def start_link(connection_string) do
@@ -10,13 +12,27 @@ defmodule Pillar.Pool.Worker do
     {:ok, Pillar.Connection.new(connection_string)}
   end
 
-  def handle_call({query, params, options}, _from, state) do
-    result = Pillar.query(state, query, params, options)
-    {:reply, result, state}
+  def handle_call({command, query, params, options}, _from, connection) do
+    result = handle_command(connection, command, query, params, options)
+    {:reply, result, connection}
   end
 
-  def handle_cast({query, params, options}, state) do
-    {:ok, _result} = Pillar.query(state, query, params, options)
-    {:noreply, state}
+  def handle_cast({command, query, params, options}, connection) do
+    {:ok, _result} = handle_command(connection, command, query, params, options)
+    {:noreply, connection}
+  end
+
+  defp handle_command(connection, command, query, params, options)
+       when command in [:insert, :select, :query] do
+    case command do
+      :insert -> Pillar.insert(connection, query, params, options)
+      :select -> Pillar.select(connection, query, params, options)
+      :query -> Pillar.query(connection, query, params, options)
+    end
+  end
+
+  defp handle_command(connection, command, table_name, record_or_records, options)
+       when command in [:insert_to_table] do
+    Pillar.insert_to_table(connection, table_name, record_or_records, options)
   end
 end

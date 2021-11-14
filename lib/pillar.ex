@@ -1,15 +1,43 @@
 defmodule Pillar do
-  @moduledoc """
-  """
+  @moduledoc false
+
   alias Pillar.Connection
   alias Pillar.HttpClient
   alias Pillar.QueryBuilder
   alias Pillar.ResponseParser
 
-  def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
-    final_sql = QueryBuilder.build(query, params) <> "\n FORMAT JSON"
-    timeout = Map.get(options, :timeout, 5_000)
+  @default_timeout_ms 5_000
 
+  def insert(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
+    final_sql = QueryBuilder.query(query, params)
+    timeout = Map.get(options, :timeout, @default_timeout_ms)
+
+    execute_sql(connection, final_sql, timeout)
+  end
+
+  def insert_to_table(%Connection{} = connection, table_name, record_or_records, options \\ %{})
+      when is_binary(table_name) do
+    final_sql = QueryBuilder.insert_to_table(table_name, record_or_records)
+    timeout = Map.get(options, :timeout, @default_timeout_ms)
+
+    execute_sql(connection, final_sql, timeout)
+  end
+
+  def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
+    final_sql = QueryBuilder.query(query, params)
+    timeout = Map.get(options, :timeout, @default_timeout_ms)
+
+    execute_sql(connection, final_sql, timeout)
+  end
+
+  def select(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
+    final_sql = QueryBuilder.query(query, params) <> "\n FORMAT JSON"
+    timeout = Map.get(options, :timeout, @default_timeout_ms)
+
+    execute_sql(connection, final_sql, timeout)
+  end
+
+  defp execute_sql(connection, final_sql, timeout) do
     connection
     |> Connection.url_from_connection()
     |> HttpClient.post(final_sql, timeout: timeout)
@@ -25,7 +53,7 @@ defmodule Pillar do
       use GenServer
       import Supervisor.Spec
 
-      @pool_timeout_for_waiting_worker 1_000
+      @pool_timeout_for_waiting_worker 5_000
 
       defp poolboy_config do
         [
@@ -49,10 +77,18 @@ defmodule Pillar do
         {:ok, init_arg}
       end
 
+      def select(sql, params \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid -> GenServer.call(pid, {:select, sql, params, options}, :infinity) end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
+
       def query(sql, params \\ %{}, options \\ %{}) do
         :poolboy.transaction(
           unquote(name),
-          fn pid -> GenServer.call(pid, {sql, params, options}, :infinity) end,
+          fn pid -> GenServer.call(pid, {:query, sql, params, options}, :infinity) end,
           @pool_timeout_for_waiting_worker
         )
       end
@@ -60,7 +96,47 @@ defmodule Pillar do
       def async_query(sql, params \\ %{}, options \\ %{}) do
         :poolboy.transaction(
           unquote(name),
-          fn pid -> GenServer.cast(pid, {sql, params, options}) end,
+          fn pid -> GenServer.cast(pid, {:query, sql, params, options}) end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
+
+      def insert(sql, params \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid -> GenServer.call(pid, {:insert, sql, params, options}, :infinity) end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
+
+      def async_insert(sql, params \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid -> GenServer.cast(pid, {:insert, sql, params, options}) end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
+
+      def insert_to_table(table_name, record_or_records \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid ->
+            GenServer.call(
+              pid,
+              {:insert_to_table, table_name, record_or_records, options},
+              :infinity
+            )
+          end,
+          @pool_timeout_for_waiting_worker
+        )
+      end
+
+      def async_insert_to_table(table_name, record_or_records \\ %{}, options \\ %{}) do
+        :poolboy.transaction(
+          unquote(name),
+          fn pid ->
+            GenServer.cast(pid, {:insert_to_table, table_name, record_or_records, options})
+          end,
           @pool_timeout_for_waiting_worker
         )
       end
