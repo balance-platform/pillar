@@ -48,7 +48,7 @@ defmodule Pillar.TypeConvert.ToElixir do
     nil
   end
 
-  def convert("DateTime64(3)", value), do: convert("DateTime", value)
+  def convert("DateTime64" <> _precision_and_zone, value), do: convert("DateTime", value)
 
   def convert("DateTime", value) do
     {:ok, datetime, _offset} = DateTime.from_iso8601(value <> "Z")
@@ -100,6 +100,10 @@ defmodule Pillar.TypeConvert.ToElixir do
   end
 
   def convert("Decimal" <> _decimal_subtypes, value) do
+    value
+  end
+
+  def convert("Map" <> _subtypes, value) do
     value
   end
 end

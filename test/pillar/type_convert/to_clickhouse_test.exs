@@ -33,7 +33,8 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
     end
 
     test "Map" do
-      assert ToClickhouse.convert(%{key: "value"}) == ~S('{"key":"value"}')
+      assert ToClickhouse.convert(%{key: "value"}) == "map('key', 'value')"
+      assert ToClickhouse.convert(%{key: "val'ue", k2: "v2"}) == "{'key':'val''ue','k2':'v2'}"
     end
 
     test "Bool" do
@@ -55,7 +56,8 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
                %{"key" => "value"},
                ~U[2020-03-26 22:26:14.286832Z],
                "Le'Blank"
-             ]) == ~S([1,2,1,0,'1970-01-01','{"key":"value"}','2020-03-26T22:26:14','Le''Blank'])
+             ]) ==
+               ~S/[1,2,1,0,'1970-01-01',map('key', 'value'),'2020-03-26T22:26:14','Le''Blank']/
 
       # array with array
       assert ToClickhouse.convert([

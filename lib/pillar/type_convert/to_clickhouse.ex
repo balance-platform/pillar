@@ -44,8 +44,13 @@ defmodule Pillar.TypeConvert.ToClickhouse do
   end
 
   def convert(param) when is_map(param) do
-    json = Jason.encode!(param)
-    convert(json)
+    encoded =
+      param
+      |> Enum.to_list()
+      |> Enum.map(fn {k, v} -> "#{convert(k)}, #{convert(v)}" end)
+      |> Enum.join(",")
+
+    "map(" <> encoded <> ")" # TODO: check if IO lists would be more efficient for larger maps
   end
 
   def convert({a, b, c, d} = ip)
