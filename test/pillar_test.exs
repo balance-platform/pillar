@@ -36,6 +36,13 @@ defmodule PillarTest do
       assert inspect(reason) =~ ~r/timeout/
     end
 
+    test "#query - timeout tests with 3s" do
+      {:error, %Pillar.HttpClient.TransportError{reason: reason}} =
+        PillarWorker.query("SELECT sleep(3)", %{}, %{timeout: 3_000})
+
+      assert inspect(reason) =~ ~r/timeout/
+    end
+
     test "#async_query" do
       assert PillarWorker.async_query("SELECT 1") == :ok
     end
