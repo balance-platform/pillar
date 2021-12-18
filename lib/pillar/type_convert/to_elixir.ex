@@ -55,6 +55,9 @@ defmodule Pillar.TypeConvert.ToElixir do
     datetime
   end
 
+  # DateTime('Europe/Moscow')
+  def convert("DateTime" <> _time_zone, value), do: convert("DateTime", value)
+
   def convert("Date", "0000-00-00") do
     nil
   end
