@@ -56,7 +56,17 @@ defmodule Pillar.TypeConvert.ToElixir do
   end
 
   # DateTime('Europe/Moscow')
-  def convert("DateTime" <> _time_zone, value), do: convert("DateTime", value)
+  def convert("DateTime" <> time_zone, value) do
+    time_zone =
+      time_zone
+      |> String.replace_leading("('", "")
+      |> String.replace_trailing("')", "")
+
+    [date, time] = String.split(value, " ")
+
+    {:ok, datetime} = DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone)
+    datetime
+  end
 
   def convert("Date", "0000-00-00") do
     nil

@@ -277,6 +277,12 @@ defmodule PillarTest do
                })
     end
 
+    test "DateTime with Timezone", %{conn: conn} do
+      sql = "SELECT toDateTime(now(), 'Europe/Moscow') AS timezone_datetime"
+
+      assert {:ok, [%{"timezone_datetime" => %DateTime{}}]} = Pillar.select(conn, sql)
+    end
+
     test "Decimal test", %{conn: conn} do
       create_table_sql = """
         CREATE TABLE IF NOT EXISTS decimal_table_#{@timestamp} (field Decimal64(2)) ENGINE = Memory
