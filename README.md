@@ -141,6 +141,16 @@ And launch this via command.
 mix migrate_clickhouse
 ```
 
+### Timezones
+
+In order to be able to use Timezones confugre your app:
+
+```elixir
+config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
+```
+
+Details here https://hexdocs.pm/elixir/1.12/DateTime.html#module-time-zone-database
+
 # Contribution
 
 Feel free to make a pull request. All contributions are appreciated!

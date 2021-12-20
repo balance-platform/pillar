@@ -6,6 +6,8 @@ defmodule PillarTest do
   @timestamp DateTime.to_unix(DateTime.utc_now())
 
   setup do
+    Calendar.put_time_zone_database(Tzdata.TimeZoneDatabase)
+
     connection_url = Application.get_env(:pillar, :connection_url)
     connection = Connection.new(connection_url)
 
