@@ -143,7 +143,7 @@ mix migrate_clickhouse
 
 ### Timezones
 
-In order to be able to use Timezones confugre your app:
+In order to be able to use Timezones configure your app:
 
 ```elixir
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
