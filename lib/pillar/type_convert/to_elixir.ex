@@ -60,7 +60,7 @@ defmodule Pillar.TypeConvert.ToElixir do
       convert("DateTime", value)
     else
       [_precision, time_zone] = params
-      convert_datetime_with_timezone(value, time_zone)
+      convert_datetime_with_timezone(value, strip_quotes(time_zone))
     end
   end
 
@@ -71,14 +71,12 @@ defmodule Pillar.TypeConvert.ToElixir do
 
   # DateTime('Europe/Moscow')
   def convert("DateTime" <> time_zone, value) do
-    time_zone = strip_brackets(time_zone)
-    convert_datetime_with_timezone(value, time_zone)
-  end
+    time_zone =
+      time_zone
+      |> strip_brackets
+      |> strip_quotes
 
-  defp convert_datetime_with_timezone(value, time_zone) do
-    [date, time] = String.split(value, " ")
-    {:ok, datetime} = DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone)
-    datetime
+    convert_datetime_with_timezone(value, time_zone)
   end
 
   def convert("Date", "0000-00-00") do
@@ -129,9 +127,21 @@ defmodule Pillar.TypeConvert.ToElixir do
     value
   end
 
+  defp convert_datetime_with_timezone(value, time_zone) do
+    [date, time] = String.split(value, " ")
+    {:ok, datetime} = DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone)
+    datetime
+  end
+
   defp strip_brackets(value) do
     value
-    |> String.replace_leading("('", "")
-    |> String.replace_trailing("')", "")
+    |> String.replace_leading("(", "")
+    |> String.replace_trailing(")", "")
+  end
+
+  defp strip_quotes(value) do
+    value
+    |> String.replace_leading("'", "")
+    |> String.replace_trailing("'", "")
   end
 end
