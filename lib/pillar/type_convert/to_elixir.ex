@@ -1,6 +1,8 @@
 defmodule Pillar.TypeConvert.ToElixir do
   @moduledoc false
 
+  require Logger
+
   def convert("(" <> type_with_parenthese, value) do
     # For example (UInt64), this type returns when IF function returns NULL or Uint64
     # SELECT IF(1 == 2, NULL, 64)
@@ -129,8 +131,15 @@ defmodule Pillar.TypeConvert.ToElixir do
 
   defp convert_datetime_with_timezone(value, time_zone) do
     [date, time] = String.split(value, " ")
-    {:ok, datetime} = DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone)
-    datetime
+
+    case DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone) do
+      {:ok, datetime} ->
+        datetime
+
+      {:error, :utc_only_time_zone_database} ->
+        Logger.warn("Add tzdata to project if you want to use Timezones.")
+        convert("DateTime", value)
+    end
   end
 
   defp strip_brackets(value) do
