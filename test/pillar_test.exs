@@ -278,9 +278,10 @@ defmodule PillarTest do
     end
 
     test "DateTime with Timezone", %{conn: conn} do
-      sql = "SELECT toDateTime(now(), 'Europe/Moscow') AS timezone_datetime"
+      sql = "SELECT toDateTime('2021-12-20 06:00:00', 'Europe/Moscow') AS timezone_datetime"
 
-      assert {:ok, [%{"timezone_datetime" => %DateTime{}}]} = Pillar.select(conn, sql)
+      assert {:ok, [%{"timezone_datetime" => %DateTime{} = datetime}]} = Pillar.select(conn, sql)
+      assert DateTime.to_string(datetime) == "2021-12-20 06:00:00+03:00 MSK Europe/Moscow"
     end
 
     test "Decimal test", %{conn: conn} do
