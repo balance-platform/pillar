@@ -48,7 +48,21 @@ defmodule Pillar.TypeConvert.ToElixir do
     nil
   end
 
-  def convert("DateTime64(3)", value), do: convert("DateTime", value)
+  # DateTime64(3)
+  # DateTime64(3, 'Europe/Moscow')
+  def convert("DateTime64" <> rest, value) do
+    params =
+      rest
+      |> strip_brackets()
+      |> String.split(", ")
+
+    if length(params) == 1 do
+      convert("DateTime", value)
+    else
+      [_precision, time_zone] = params
+      convert_datetime_with_timezone(value, time_zone)
+    end
+  end
 
   def convert("DateTime", value) do
     {:ok, datetime, _offset} = DateTime.from_iso8601(value <> "Z")
@@ -57,13 +71,12 @@ defmodule Pillar.TypeConvert.ToElixir do
 
   # DateTime('Europe/Moscow')
   def convert("DateTime" <> time_zone, value) do
-    time_zone =
-      time_zone
-      |> String.replace_leading("('", "")
-      |> String.replace_trailing("')", "")
+    time_zone = strip_brackets(time_zone)
+    convert_datetime_with_timezone(value, time_zone)
+  end
 
+  defp convert_datetime_with_timezone(value, time_zone) do
     [date, time] = String.split(value, " ")
-
     {:ok, datetime} = DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone)
     datetime
   end
@@ -114,5 +127,11 @@ defmodule Pillar.TypeConvert.ToElixir do
 
   def convert("Decimal" <> _decimal_subtypes, value) do
     value
+  end
+
+  defp strip_brackets(value) do
+    value
+    |> String.replace_leading("('", "")
+    |> String.replace_trailing("')", "")
   end
 end
