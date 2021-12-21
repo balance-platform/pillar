@@ -137,7 +137,11 @@ defmodule Pillar.TypeConvert.ToElixir do
         datetime
 
       {:error, :utc_only_time_zone_database} ->
-        Logger.warn("Add tzdata to project if you want to use Timezones.")
+        Logger.warn(
+          "Add timezone database to your project if you want to use Timezones (tzdata or tz)."
+        )
+
+        # fallback to DateTime without Timezones
         convert("DateTime", value)
     end
   end
