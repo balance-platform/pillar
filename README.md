@@ -17,6 +17,7 @@ Online Analytical Processing (OLAP) database management system.
   - [Async insert](#async-insert)
   - [Buffer for periodical bulk inserts](#buffer-for-periodical-bulk-inserts)
   - [Migrations](#migrations)
+  - [DateTime Timezones](#timezones)
 
 ## Usage
 

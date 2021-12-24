@@ -280,10 +280,17 @@ defmodule PillarTest do
     end
 
     test "DateTime with Timezone", %{conn: conn} do
-      sql = "SELECT toDateTime('2021-12-20 06:00:00', 'Europe/Moscow') AS timezone_datetime"
+      sql =
+        "SELECT toTimeZone(toDateTime('2021-12-20 06:00:00'), 'Europe/Moscow') AS timezone_datetime"
 
-      assert {:ok, [%{"timezone_datetime" => %DateTime{} = datetime}]} = Pillar.select(conn, sql)
-      assert DateTime.to_string(datetime) == "2021-12-20 06:00:00+03:00 MSK Europe/Moscow"
+      assert {:ok, [%{"timezone_datetime" => datetime_or_error}]} = Pillar.select(conn, sql)
+      # it's OK to return error for elixir lower 1.11
+      if datetime_or_error == {:error, "feature needs elixir v1.11 minimum"} do
+        assert true
+      else
+        assert DateTime.to_string(datetime_or_error) ==
+                 "2021-12-20 09:00:00+03:00 MSK Europe/Moscow"
+      end
     end
 
     test "Decimal test", %{conn: conn} do
