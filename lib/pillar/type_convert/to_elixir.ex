@@ -132,7 +132,7 @@ defmodule Pillar.TypeConvert.ToElixir do
   defp convert_datetime_with_timezone(value, time_zone) do
     [date, time] = String.split(value, " ")
 
-    case function_exported?(DateTime, :new, 3) &&
+    case Code.ensure_loaded(DateTime) && function_exported?(DateTime, :new, 3) &&
            DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone) do
       false ->
         {:error, "feature needs elixir v1.11 minimum"}
