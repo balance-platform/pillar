@@ -2,7 +2,7 @@ defmodule Pillar.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/balance-platform/pillar"
-  @version "0.26.0"
+  @version "0.27.0"
 
   def project do
     [

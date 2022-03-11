@@ -64,11 +64,11 @@ defmodule Pillar.BulkInsertBuffer do
       end
 
       def force_bulk_insert do
-        GenServer.call(__MODULE__, :do_insert)
+        GenServer.call(__MODULE__, :do_insert, 60_000)
       end
 
       def records_for_bulk_insert() do
-        GenServer.call(__MODULE__, :records_for_bulk_insert)
+        GenServer.call(__MODULE__, :records_for_bulk_insert, 60_000)
       end
 
       def handle_call(:do_insert, _from, state) do
