@@ -63,6 +63,13 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
              ]) == "[[]]"
     end
 
+    test "Keyword" do
+      assert ToClickhouse.convert(foo: "bar") == "{'foo':'bar'}"
+      assert ToClickhouse.convert(foo: "bar", baz: "bar") == "{'foo':'bar','baz':'bar'}"
+      assert ToClickhouse.convert([{:foo, "bar"}]) == "{'foo':'bar'}"
+      assert ToClickhouse.convert("foo long": true) == "{'foo long':1}"
+    end
+
     test "IPv4" do
       assert ToClickhouse.convert({192, 168, 1, 1}) == "'192.168.1.1'"
     end

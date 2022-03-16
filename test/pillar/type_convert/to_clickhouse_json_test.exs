@@ -67,5 +67,9 @@ defmodule Pillar.TypeConvert.ToClickhouseJsonTest do
                []
              ]) == [[]]
     end
+
+    test "Keyword" do
+      assert ToClickhouseJson.convert(foo: "bar", baz: "bak") == %{"baz" => "bak", "foo" => "bar"}
+    end
   end
 end

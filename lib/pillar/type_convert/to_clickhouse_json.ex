@@ -1,7 +1,13 @@
 defmodule Pillar.TypeConvert.ToClickhouseJson do
   @moduledoc false
   def convert(param) when is_list(param) do
-    Enum.map(param, &convert/1)
+    if !Enum.empty?(param) && Keyword.keyword?(param) do
+      param
+      |> Enum.map(fn {k, v} -> {to_string(k), convert(v)} end)
+      |> Enum.into(%{})
+    else
+      Enum.map(param, &convert/1)
+    end
   end
 
   def convert(param) when is_integer(param) do
