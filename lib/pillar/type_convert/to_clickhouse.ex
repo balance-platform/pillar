@@ -1,9 +1,18 @@
 defmodule Pillar.TypeConvert.ToClickhouse do
   @moduledoc false
   def convert(param) when is_list(param) do
-    values = Enum.map_join(param, ",", &convert/1)
+    if Keyword.keyword?(param) && !Enum.empty?(param) do
+      values =
+        param
+        |> Enum.map(fn {k, v} -> "'#{to_string(k)}':#{convert(v)}" end)
+        |> Enum.join(",")
 
-    "[#{values}]"
+      "{#{values}}"
+    else
+      values = Enum.map_join(param, ",", &convert/1)
+
+      "[#{values}]"
+    end
   end
 
   def convert(nil) do
