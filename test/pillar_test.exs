@@ -3,6 +3,8 @@ defmodule PillarTest do
   doctest Pillar
   alias Pillar.Connection
 
+  require Logger
+
   @timestamp DateTime.to_unix(DateTime.utc_now())
 
   setup do
@@ -357,17 +359,24 @@ defmodule PillarTest do
     end
 
     test "Keyword tests", %{conn: conn} do
-      sql_string_values = "SELECT map('foo', 'bar', 'baz', 'test') as test_map"
-      sql_integer_values = "SELECT map('foo', 1, 'bar', 2) as test_map"
-      sql_array_values = "SELECT map('foo', ['1', '2', '3'], 'bar', ['a', 'b']) as test_map"
+      %{"major" => major} = version(conn)
 
-      assert Pillar.select(conn, sql_string_values) ==
-               {:ok, [%{"test_map" => [baz: "test", foo: "bar"]}]}
+      if major >= 21 do
+        sql_string_values = "SELECT map('foo', 'bar', 'baz', 'test') as test_map"
+        sql_integer_values = "SELECT map('foo', 1, 'bar', 2) as test_map"
+        sql_array_values = "SELECT map('foo', ['1', '2', '3'], 'bar', ['a', 'b']) as test_map"
 
-      assert Pillar.select(conn, sql_integer_values) == {:ok, [%{"test_map" => [bar: 2, foo: 1]}]}
+        assert Pillar.select(conn, sql_string_values) ==
+                 {:ok, [%{"test_map" => [baz: "test", foo: "bar"]}]}
 
-      assert Pillar.select(conn, sql_array_values) ==
-               {:ok, [%{"test_map" => [bar: ["a", "b"], foo: ["1", "2", "3"]]}]}
+        assert Pillar.select(conn, sql_integer_values) ==
+                 {:ok, [%{"test_map" => [bar: 2, foo: 1]}]}
+
+        assert Pillar.select(conn, sql_array_values) ==
+                 {:ok, [%{"test_map" => [bar: ["a", "b"], foo: ["1", "2", "3"]]}]}
+      else
+        Logger.warn("Parentheses tests skip, becouse CH major version is lower than 21")
+      end
     end
   end
 
@@ -549,26 +558,44 @@ defmodule PillarTest do
     end
 
     test "insert keyword as map", %{conn: conn} do
-      table_name = "to_table_inserts_keyword_#{@timestamp}"
+      %{"major" => major} = version(conn)
 
-      create_table_sql = """
-      CREATE TABLE IF NOT EXISTS #{table_name} (
-          field4 Map(String, String)
-        ) ENGINE = Memory
-      """
+      if major >= 21 do
+        table_name = "to_table_inserts_keyword_#{@timestamp}"
 
-      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS #{table_name} (
+            field4 Map(String, String)
+          ) ENGINE = Memory
+        """
 
-      record = %{
-        "field4" => [foo: "bar", baz: "bak"]
-      }
+        assert {:ok, ""} = Pillar.query(conn, create_table_sql)
 
-      assert {:ok, ""} = Pillar.insert_to_table(conn, table_name, record)
+        record = %{
+          "field4" => [foo: "bar", baz: "bak"]
+        }
 
-      assert {:ok,
-              [
-                %{"field4" => [{:baz, "bak"}, {:foo, "bar"}]}
-              ]} = Pillar.select(conn, "select * from #{table_name}")
+        assert {:ok, ""} = Pillar.insert_to_table(conn, table_name, record)
+
+        assert {:ok,
+                [
+                  %{"field4" => [{:baz, "bak"}, {:foo, "bar"}]}
+                ]} = Pillar.select(conn, "select * from #{table_name}")
+      else
+        Logger.warn("insert keyword as map, becouse CH major version is lower than 21")
+      end
     end
+  end
+
+  defp version(conn) do
+    {:ok, [%{"version()" => version}]} = Pillar.select(conn, "SELECT version()")
+    [major, minor, fix, build] = String.split(version, ".")
+
+    %{
+      "major" => String.to_integer(major),
+      "minor" => String.to_integer(minor),
+      "fix" => String.to_integer(fix),
+      "build" => String.to_integer(build)
+    }
   end
 end
