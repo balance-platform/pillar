@@ -45,9 +45,13 @@ defmodule Pillar.Migrations.RollbackTest do
     assert {:error, %Response{body: body3}} =
              Pillar.query(conn, "select count(*) from example_table3")
 
+    assert {:error, %Response{body: body4}} =
+             Pillar.query(conn, "select count(*) from example_table4")
+
     assert body =~ ~r/example_table doesn\'t exist/
     assert body2 =~ ~r/example_table2 doesn\'t exist/
     assert body3 =~ ~r/example_table3 doesn\'t exist/
+    assert body4 =~ ~r/example_table4 doesn\'t exist/
   end
 
   test "#list_of_success_migrations", %{conn: conn} do
