@@ -28,7 +28,11 @@ defmodule Pillar.Migrations.Migrate do
 
     case count do
       0 ->
-        {:ok, _} = Pillar.query(connection, sql)
+        multi = Base.multify_sql(sql)
+
+        Enum.each(multi, fn sql ->
+          {:ok, _} = Pillar.query(connection, sql)
+        end)
 
         {:ok, _} =
           Pillar.insert(connection, "INSERT INTO pillar_migrations (migration) SELECT {name}", %{

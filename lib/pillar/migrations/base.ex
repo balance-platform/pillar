@@ -46,4 +46,14 @@ defmodule Pillar.Migrations.Base do
     |> Kernel.<>(name)
     |> String.to_atom()
   end
+
+  def multify_sql(sql) do
+    case sql do
+      sql when is_binary(sql) ->
+        [sql]
+
+      multi when is_list(multi) ->
+        multi
+    end
+  end
 end

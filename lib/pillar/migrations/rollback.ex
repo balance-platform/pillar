@@ -32,7 +32,11 @@ defmodule Pillar.Migrations.Rollback do
     if function_exported?(module, :down, 0) do
       sql = module.down
 
-      {:ok, _result} = Pillar.query(connection, sql, %{})
+      multi = Base.multify_sql(sql)
+
+      Enum.each(multi, fn sql ->
+        {:ok, _result} = Pillar.query(connection, sql, %{})
+      end)
 
       :ok
     else
