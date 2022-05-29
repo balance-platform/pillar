@@ -7,6 +7,6 @@ defmodule Pillar.Migrations.Example_migration3 do
   end
 
   def down do
-    ["DROP TABLE example_table3", "DROP TABLE example_table4"]
+    ["DROP TABLE IF EXISTS example_table3", "DROP TABLE IF EXISTS example_table4"]
   end
 end
