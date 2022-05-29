@@ -283,7 +283,7 @@ defmodule PillarTest do
 
     test "DateTime with Timezone", %{conn: conn} do
       sql =
-        "SELECT toTimeZone(toDateTime('2021-12-20 06:00:00'), 'Europe/Moscow') AS timezone_datetime"
+        "SELECT toTimeZone(toDateTime('2021-12-20 06:00:00', 'UTC'), 'Europe/Moscow') AS timezone_datetime"
 
       assert {:ok, [%{"timezone_datetime" => datetime_or_error}]} = Pillar.select(conn, sql)
       # it's OK to return error for elixir lower 1.11
