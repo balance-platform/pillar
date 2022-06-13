@@ -35,6 +35,10 @@ defmodule Pillar.ResponseParser do
     {:error, error}
   end
 
+  def parse(%RuntimeError{} = error) do
+    {:error, error}
+  end
+
   defp join_meta_to_map(meta_list) do
     meta_list
     |> Enum.reduce(%{}, fn %{"name" => name, "type" => type}, final_map ->

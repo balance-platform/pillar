@@ -14,7 +14,7 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-18.04
-    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / CH ${{matrix.clickhouse}}
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / CH ${{matrix.clickhouse}} / HTTP Adapter ${{matrix.adapter}}
     services:
       clickhouse:
         image: clickhouse/clickhouse-server:${{matrix.clickhouse}}
@@ -22,10 +22,12 @@ jobs:
         - 8123:8123
     strategy:
       matrix:
+        adapter: [HttpcAdapter, TeslaMintAdapter]
         otp: [23.1.2]
         elixir: [1.11.4, 1.12.0, 1.13.4]
         clickhouse: [22.5, 22.9.2, 23.1]
     env:
+      PILLAR_HTTP_ADAPTER: ${{matrix.adapter}}
       MIX_ENV: test
       CLICKHOUSE_URL: "http://localhost:8123"
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

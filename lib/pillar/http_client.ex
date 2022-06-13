@@ -1,51 +1,27 @@
 defmodule Pillar.HttpClient do
   @moduledoc false
-  alias Pillar.HttpClient.Response
-  alias Pillar.HttpClient.TransportError
+  @default_http_adapter Pillar.HttpClient.TeslaMintAdapter
 
+  @spec post(String.t(), String.t(), Keyword.t()) ::
+          Pillar.HttpClient.Response.t()
+          | Pillar.HttpClient.TransportError.t()
+          | RuntimeError.t()
   def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
-    timeout = Keyword.get(options, :timeout, 10_000)
+    http_adapter = adapter()
 
-    middleware = [
-      Tesla.Middleware.FollowRedirects,
-      {Tesla.Middleware.Timeout, timeout: timeout}
-    ]
-
-    adapter = {Tesla.Adapter.Mint, timeout: timeout, transport_opts: [timeout: timeout]}
-
-    result =
-      middleware
-      |> Tesla.client(adapter)
-      |> Tesla.post(url, post_body, [])
-
-    response_to_app_structure(result)
-  end
-
-  defp response_to_app_structure(response_tuple) do
-    case response_tuple do
-      {:ok, %Tesla.Env{status: status_code, headers: headers, body: body}} ->
-        %Response{
-          status_code: status_code,
-          body: format_body(body),
-          headers: downcase_headers_names(headers)
-        }
-
-      {:error, %Mint.TransportError{reason: reason}} ->
-        %TransportError{reason: reason}
-
-      {:error, reason} ->
-        %TransportError{reason: reason}
+    if Code.ensure_loaded(http_adapter) && function_exported?(http_adapter, :post, 3) do
+      http_adapter.post(url, post_body, options)
+    else
+      %RuntimeError{message: "#{inspect(http_adapter)} is not loaded or unknown"}
     end
   end
 
-  defp downcase_headers_names(headers) do
-    Enum.map(headers, fn {charlist_key, value} ->
-      string_key = to_string(charlist_key)
-      {String.downcase(string_key), to_string(value)}
-    end)
-  end
+  def adapter do
+    module =
+      Application.get_all_env(:pillar)
+      |> Access.get(__MODULE__, [])
+      |> Access.get(:http_adapter)
 
-  defp format_body(nil), do: ""
-  defp format_body(data) when is_binary(data), do: data
-  defp format_body(data) when is_list(data), do: IO.iodata_to_binary(data)
+    module || @default_http_adapter
+  end
 end

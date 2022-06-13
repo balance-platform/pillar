@@ -31,7 +31,7 @@ defmodule Pillar.Migrations.Migrate do
         multi = Base.multify_sql(sql)
 
         Enum.each(multi, fn sql ->
-          {:ok, _} = Pillar.query(connection, sql)
+          {:ok, _} = Pillar.query(connection, sql, %{})
         end)
 
         {:ok, _} =
