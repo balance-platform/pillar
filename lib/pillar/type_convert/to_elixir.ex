@@ -89,6 +89,10 @@ defmodule Pillar.TypeConvert.ToElixir do
     Date.from_iso8601!(value)
   end
 
+  def convert("Date32", value) do
+    Date.from_iso8601!(value)
+  end
+
   def convert("IPv4", value) do
     value
   end
