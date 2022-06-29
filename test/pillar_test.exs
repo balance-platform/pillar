@@ -260,6 +260,24 @@ defmodule PillarTest do
                Pillar.query(conn, "SELECT * FROM #{table_name} LIMIT 1 FORMAT JSON")
     end
 
+    test "Date32 test", %{conn: conn} do
+      table_name = "date32_test_#{@timestamp}"
+
+      create_table_sql = """
+      CREATE TABLE IF NOT EXISTS #{table_name} (field Date32) ENGINE = Memory
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+      assert {:ok, ""} =
+               Pillar.query(conn, "INSERT INTO #{table_name} SELECT {date}", %{
+                 date: Date.utc_today()
+               })
+
+      assert {:ok, [%{"field" => %Date{}}]} =
+               Pillar.select(conn, "SELECT * FROM #{table_name} LIMIT 1")
+    end
+
     test "DateTime test", %{conn: conn} do
       sql = "SELECT now()"
 
