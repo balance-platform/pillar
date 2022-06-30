@@ -261,21 +261,31 @@ defmodule PillarTest do
     end
 
     test "Date32 test", %{conn: conn} do
-      table_name = "date32_test_#{@timestamp}"
+      sql = "SELECT toDate32(now()) AS Date32"
 
-      create_table_sql = """
-      CREATE TABLE IF NOT EXISTS #{table_name} (field Date32) ENGINE = Memory
-      """
+      case Pillar.select(conn, sql) do
+        {:error, %Pillar.HttpClient.Response{body: error}} ->
+          assert error =~ ~r/Unknown function toDate32/
 
-      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+        {:ok, [%{"Date32" => date32_result}]} ->
+          assert %Date{} = date32_result
 
-      assert {:ok, ""} =
-               Pillar.query(conn, "INSERT INTO #{table_name} SELECT {date}", %{
-                 date: Date.utc_today()
-               })
+          table_name = "date32_test_#{@timestamp}"
 
-      assert {:ok, [%{"field" => %Date{}}]} =
-               Pillar.select(conn, "SELECT * FROM #{table_name} LIMIT 1")
+          create_table_sql = """
+          CREATE TABLE IF NOT EXISTS #{table_name} (field Date32) ENGINE = Memory
+          """
+
+          assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+          assert {:ok, ""} =
+                   Pillar.query(conn, "INSERT INTO #{table_name} SELECT {date}", %{
+                     date: Date.utc_today()
+                   })
+
+          assert {:ok, [%{"field" => %Date{}}]} =
+                   Pillar.select(conn, "SELECT * FROM #{table_name} LIMIT 1")
+      end
     end
 
     test "DateTime test", %{conn: conn} do
