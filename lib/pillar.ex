@@ -45,35 +45,45 @@ defmodule Pillar do
   end
 
   defmacro __using__(options) do
-    quote bind_quoted: [options: options] do
+    quote do
       use GenServer
       import Supervisor.Spec
 
-      connection_strings = Keyword.get(options, :connection_strings)
-      name = Keyword.get(options, :name)
-      pool_size = Keyword.get(options, :pool_size)
+      defp connection_strings do
+        Keyword.get(unquote(options), :connection_strings)
+      end
 
-      @pool_timeout 5_000
-      pool_timeout = Keyword.get(options, :pool_timeout, @pool_timeout)
+      defp name do
+        Keyword.get(unquote(options), :name, "PillarPool")
+      end
 
-      @timeout 5_000
-      timeout = Keyword.get(options, :timeout, @timeout)
+      defp pool_size() do
+        Keyword.get(unquote(options), :pool_size, 10)
+      end
+
+      defp pool_timeout() do
+        Keyword.get(unquote(options), :pool_timeout, 5_000)
+      end
+
+      defp timeout() do
+        Keyword.get(unquote(options), :timeout, 5_000)
+      end
 
       defp poolboy_config do
         [
-          name: {:local, unquote(name)},
+          name: {:local, name()},
           worker_module: Pillar.Pool.Worker,
-          size: unquote(pool_size),
-          max_overflow: Kernel.ceil(unquote(pool_size) * 0.3)
+          size: pool_size(),
+          max_overflow: Kernel.ceil(pool_size() * 0.3)
         ]
       end
 
       def start_link(_opts \\ nil) do
         children = [
-          :poolboy.child_spec(:worker, poolboy_config(), unquote(connection_strings))
+          :poolboy.child_spec(:worker, poolboy_config(), connection_strings())
         ]
 
-        opts = [strategy: :one_for_one, name: :"#{unquote(name)}.Supervisor"]
+        opts = [strategy: :one_for_one, name: :"#{name()}.Supervisor"]
         Supervisor.start_link(children, opts)
       end
 
@@ -81,53 +91,53 @@ defmodule Pillar do
         {:ok, init_arg}
       end
 
-      def select(sql, params \\ %{}, options \\ %{timeout: unquote(timeout)}) do
+      def select(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
         :poolboy.transaction(
-          unquote(name),
+          name(),
           fn pid -> GenServer.call(pid, {:select, sql, params, options}, :infinity) end,
-          unquote(pool_timeout)
+          pool_timeout()
         )
       end
 
-      def query(sql, params \\ %{}, options \\ %{timeout: unquote(timeout)}) do
+      def query(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
         :poolboy.transaction(
-          unquote(name),
+          name(),
           fn pid -> GenServer.call(pid, {:query, sql, params, options}, :infinity) end,
-          unquote(pool_timeout)
+          pool_timeout()
         )
       end
 
-      def async_query(sql, params \\ %{}, options \\ %{timeout: unquote(timeout)}) do
+      def async_query(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
         :poolboy.transaction(
-          unquote(name),
+          name(),
           fn pid -> GenServer.cast(pid, {:query, sql, params, options}) end,
-          unquote(pool_timeout)
+          pool_timeout()
         )
       end
 
-      def insert(sql, params \\ %{}, options \\ %{timeout: unquote(timeout)}) do
+      def insert(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
         :poolboy.transaction(
-          unquote(name),
+          name(),
           fn pid -> GenServer.call(pid, {:insert, sql, params, options}, :infinity) end,
-          unquote(pool_timeout)
+          pool_timeout()
         )
       end
 
-      def async_insert(sql, params \\ %{}, options \\ %{timeout: unquote(timeout)}) do
+      def async_insert(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
         :poolboy.transaction(
-          unquote(name),
+          name(),
           fn pid -> GenServer.cast(pid, {:insert, sql, params, options}) end,
-          unquote(pool_timeout)
+          pool_timeout()
         )
       end
 
       def insert_to_table(
             table_name,
             record_or_records \\ %{},
-            options \\ %{timeout: unquote(timeout)}
+            options \\ %{timeout: timeout()}
           ) do
         :poolboy.transaction(
-          unquote(name),
+          name(),
           fn pid ->
             GenServer.call(
               pid,
@@ -135,21 +145,21 @@ defmodule Pillar do
               :infinity
             )
           end,
-          unquote(pool_timeout)
+          pool_timeout()
         )
       end
 
       def async_insert_to_table(
             table_name,
             record_or_records \\ %{},
-            options \\ %{timeout: unquote(timeout)}
+            options \\ %{timeout: timeout()}
           ) do
         :poolboy.transaction(
-          unquote(name),
+          name(),
           fn pid ->
             GenServer.cast(pid, {:insert_to_table, table_name, record_or_records, options})
           end,
-          unquote(pool_timeout)
+          pool_timeout()
         )
       end
     end
