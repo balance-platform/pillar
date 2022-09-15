@@ -30,6 +30,10 @@ defmodule Pillar.TypeConvert.ToElixir do
     value
   end
 
+  def convert("Bool", value) when is_boolean(value) do
+    value
+  end
+
   def convert("Nullable" <> type, value) do
     case is_nil(value) do
       true -> nil
