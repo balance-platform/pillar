@@ -613,6 +613,33 @@ defmodule PillarTest do
         Logger.warn("insert keyword as map, becouse CH major version is lower than 21")
       end
     end
+
+    test "insert keyword as boolean", %{conn: conn} do
+      %{"major" => major, "minor" => minor} = version(conn)
+
+      if major > 21 or (major >= 21 and minor >= 12) do
+        table_name = "to_table_inserts_keyword_#{@timestamp}"
+
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS #{table_name} (
+            field5 boolean
+          ) ENGINE = Memory
+        """
+
+        assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+        record = %{"field5" => true}
+
+        assert {:ok, ""} = Pillar.insert_to_table(conn, table_name, record)
+
+        assert {:ok,
+                [
+                  %{"field5" => true}
+                ]} = Pillar.select(conn, "select * from #{table_name}")
+      else
+        Logger.warn("insert keyword as boolean, because CH major version is lower than 21")
+      end
+    end
   end
 
   defp version(conn) do
