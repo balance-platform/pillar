@@ -33,8 +33,8 @@ defmodule Pillar.TypeConvert.ToClickhouseJsonTest do
     end
 
     test "Bool" do
-      assert ToClickhouseJson.convert(true) == "1"
-      assert ToClickhouseJson.convert(false) == "0"
+      assert ToClickhouseJson.convert(true) == 1
+      assert ToClickhouseJson.convert(false) == 0
     end
 
     test "DateTime" do
@@ -45,8 +45,8 @@ defmodule Pillar.TypeConvert.ToClickhouseJsonTest do
       assert ToClickhouseJson.convert([
                1,
                2,
-               true,
-               false,
+               1,
+               0,
                ~D[1970-01-01],
                %{"key" => "value"},
                ~U[2020-03-26 22:26:14.286832Z],

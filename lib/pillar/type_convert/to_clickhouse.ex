@@ -25,8 +25,8 @@ defmodule Pillar.TypeConvert.ToClickhouse do
 
   def convert(param) when is_boolean(param) do
     case param do
-      true -> true
-      false -> false
+      true -> 1
+      false -> 0
     end
   end
 
