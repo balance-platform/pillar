@@ -108,15 +108,23 @@ defmodule Pillar.BulkInsertBufferTest do
       end
     end
 
-    test "on_errors option, dump_to_file -> saves data to file" do
-      {:ok, _pid} = BulkToLogsWithErrorHandler.start_link()
+    test "on_errors option, dump_to_file -> saves data to file", %{conn: conn} do
+      %{"major" => major, "minor" => minor} = version(conn)
 
-      BulkToLogsWithErrorHandler.insert(%{a: "hello", b: "honey"})
-      BulkToLogsWithErrorHandler.force_bulk_insert()
+      if major >= 22 && minor >= 6 do
+        # Clickhouse of this version doesn't return errors on insert becouse of internal queue
+        # skip test scenario on this version and newer
+        :ok
+      else
+        {:ok, _pid} = BulkToLogsWithErrorHandler.start_link()
 
-      assert File.read!("errors_from_bulk_insert_tests") == "[%{a: \"hello\", b: \"honey\"}]"
+        BulkToLogsWithErrorHandler.insert(%{a: "hello", b: "honey"})
+        BulkToLogsWithErrorHandler.force_bulk_insert()
 
-      File.rm!("errors_from_bulk_insert_tests")
+        assert File.read!("errors_from_bulk_insert_tests") == "[%{a: \"hello\", b: \"honey\"}]"
+
+        File.rm!("errors_from_bulk_insert_tests")
+      end
     end
 
     test "on_errors option, doesn't saves data, if there were no errors" do
@@ -132,5 +140,17 @@ defmodule Pillar.BulkInsertBufferTest do
 
       assert File.exists?("errors_from_bulk_insert_tests") == false
     end
+  end
+
+  defp version(conn) do
+    {:ok, [%{"version()" => version}]} = Pillar.select(conn, "SELECT version()")
+    [major, minor, fix, build] = String.split(version, ".")
+
+    %{
+      "major" => String.to_integer(major),
+      "minor" => String.to_integer(minor),
+      "fix" => String.to_integer(fix),
+      "build" => String.to_integer(build)
+    }
   end
 end
