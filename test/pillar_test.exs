@@ -460,6 +460,8 @@ defmodule PillarTest do
 
   describe "#insert_to_table" do
     test "bad request with unexistable fields", %{conn: conn} do
+      %{"major" => major, "minor" => minor} = version(conn)
+
       table_name = "to_table_inserts_with_fail_expected#{@timestamp}"
 
       create_table_sql = """
@@ -473,7 +475,7 @@ defmodule PillarTest do
 
       assert {:ok, ""} = Pillar.query(conn, create_table_sql)
 
-      assert {:error, result} =
+      assert {atom, result} =
                Pillar.insert_to_table(conn, table_name, %{
                  field0: 1.1,
                  field1: "Hello",
@@ -482,7 +484,21 @@ defmodule PillarTest do
                  field4: "this field doesn't exists"
                })
 
-      assert inspect(result) =~ ~r/Unknown field found while parsing/
+      is_ok =
+        cond do
+          major >= 22 && minor >= 6 && atom == :ok && result == "" ->
+            true
+
+          major <= 22 && minor < 6 && atom == :error &&
+              inspect(result) =~ ~r/Unknown field found while parsing/ ->
+            true
+
+          # it's all other cases
+          true ->
+            false
+        end
+
+      assert is_ok == true
     end
 
     test "insert one record", %{conn: conn} do
