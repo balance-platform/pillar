@@ -5,7 +5,7 @@ defmodule Pillar.Migrations.Rollback do
   alias Pillar.Connection
   alias Pillar.Migrations.Base
 
-  def rollback_n_migrations(%Connection{} = connection, path, rollback_count) do
+  def rollback_n_migrations(%Connection{} = connection, path, rollback_count, options \\ %{}) do
     :ok = Base.create_migration_history_table(connection)
 
     files_and_modules = Base.compile_migration_files(path)
@@ -21,21 +21,21 @@ defmodule Pillar.Migrations.Rollback do
       {_filename, module} =
         Enum.find(files_and_modules, fn {fname, _module} -> fname == filename end)
 
-      :ok = do_rollback(connection, module)
+      :ok = do_rollback(connection, module, options)
       delete_migration_from_table(connection, filename)
 
       filename
     end)
   end
 
-  def do_rollback(connection, module) do
+  def do_rollback(connection, module, options \\ %{}) do
     if function_exported?(module, :down, 0) do
       sql = module.down
 
       multi = Base.multify_sql(sql)
 
       Enum.each(multi, fn sql ->
-        {:ok, _result} = Pillar.query(connection, sql, %{})
+        {:ok, _result} = Pillar.query(connection, sql, %{}, options)
       end)
 
       :ok

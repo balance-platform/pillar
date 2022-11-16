@@ -21,6 +21,7 @@ defmodule Pillar.MigrationsMacro do
 
       @default_path_suffix "priv/pillar_migrations"
       @path_suffix Keyword.get(unquote(args), :path_suffix, @default_path_suffix)
+      @options Keyword.get(unquote(Macro.escape(args)), :options, %{})
 
       def generate(name) do
         template = Generator.migration_template(name)
@@ -33,11 +34,16 @@ defmodule Pillar.MigrationsMacro do
       end
 
       def migrate(%Connection{} = conn, path \\ nil) do
-        Migrate.run_all_migrations(conn, path || migrations_path())
+        Migrate.run_all_migrations(conn, path || migrations_path(), @options)
       end
 
       def rollback(%Connection{} = conn, path \\ nil, count_of_migrations \\ 1) do
-        Rollback.rollback_n_migrations(conn, path || migrations_path(), count_of_migrations)
+        Rollback.rollback_n_migrations(
+          conn,
+          path || migrations_path(),
+          count_of_migrations,
+          @options
+        )
       end
 
       @doc """
