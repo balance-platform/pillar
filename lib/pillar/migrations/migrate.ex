@@ -5,18 +5,18 @@ defmodule Pillar.Migrations.Migrate do
   alias Pillar.Connection
   alias Pillar.Migrations.Base
 
-  def run_all_migrations(%Connection{} = connection, path) do
+  def run_all_migrations(%Connection{} = connection, path, options \\ %{}) do
     :ok = Base.create_migration_history_table(connection)
 
     files_and_modules = Base.compile_migration_files(path)
 
     Enum.map(files_and_modules, fn {filename, module} ->
-      result = migrate_if_was_not_migrated(connection, filename, module.up)
+      result = migrate_if_was_not_migrated(connection, filename, module.up, options)
       {filename, result}
     end)
   end
 
-  def migrate_if_was_not_migrated(connection, migration_name, sql) do
+  def migrate_if_was_not_migrated(connection, migration_name, sql, options \\ %{}) do
     {:ok, [%{"qty" => count}]} =
       Pillar.select(
         connection,
@@ -35,9 +35,14 @@ defmodule Pillar.Migrations.Migrate do
         end)
 
         {:ok, _} =
-          Pillar.insert(connection, "INSERT INTO pillar_migrations (migration) SELECT {name}", %{
-            name: migration_name
-          })
+          Pillar.insert(
+            connection,
+            "INSERT INTO pillar_migrations (migration) SELECT {name}",
+            %{
+              name: migration_name
+            },
+            options
+          )
 
         :migrated
 
