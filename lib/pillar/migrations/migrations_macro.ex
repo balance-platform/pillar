@@ -21,7 +21,7 @@ defmodule Pillar.MigrationsMacro do
 
       @default_path_suffix "priv/pillar_migrations"
       @path_suffix Keyword.get(unquote(args), :path_suffix, @default_path_suffix)
-      @options Keyword.get(unquote(Macro.escape(args)), :options, %{})
+      @options Keyword.get(unquote(args), :options, []) |> Enum.into(%{})
 
       def generate(name) do
         template = Generator.migration_template(name)
