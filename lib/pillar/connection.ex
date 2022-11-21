@@ -60,7 +60,7 @@ defmodule Pillar.Connection do
     }
   end
 
-  def url_from_connection(%__MODULE__{} = connect_config) do
+  def url_from_connection(%__MODULE__{} = connect_config, options \\ %{}) do
     params =
       reject_nils(%{
         password: connect_config.password,
@@ -70,6 +70,12 @@ defmodule Pillar.Connection do
         allow_suspicious_low_cardinality_types:
           @boolean_to_clickhouse[connect_config.allow_suspicious_low_cardinality_types]
       })
+
+    params =
+      case Map.fetch(options, :db_side_batch_insertions) do
+        {:ok, true} -> Map.put(params, "async_insert", 1)
+        _ -> params
+      end
 
     uri_struct = %URI{
       host: connect_config.host,
