@@ -52,5 +52,29 @@ defmodule Pillar.ConnectionTest do
 
       assert Connection.url_from_connection(connection) == "https://localhost:8123/?"
     end
+
+    test "build valid url with db_side_batch_insertions" do
+      connection = %Connection{
+        database: "default",
+        host: "localhost",
+        scheme: "https",
+        user: "user",
+        password: "password",
+        port: 8123
+      }
+
+      assert Connection.url_from_connection(connection) ==
+               "https://localhost:8123/?database=default&password=password&user=user"
+
+      options = %{db_side_batch_insertions: true}
+
+      assert Connection.url_from_connection(connection, options) ==
+               "https://localhost:8123/?database=default&password=password&user=user&async_insert=1"
+
+      options = %{db_side_batch_insertions: false}
+
+      assert Connection.url_from_connection(connection, options) ==
+               "https://localhost:8123/?database=default&password=password&user=user"
+    end
   end
 end

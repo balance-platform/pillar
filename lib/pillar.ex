@@ -10,36 +10,30 @@ defmodule Pillar do
 
   def insert(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.query(query, params)
-    timeout = Map.get(options, :timeout, @default_timeout_ms)
-
-    execute_sql(connection, final_sql, timeout)
+    execute_sql(connection, final_sql, options)
   end
 
   def insert_to_table(%Connection{} = connection, table_name, record_or_records, options \\ %{})
       when is_binary(table_name) do
     final_sql = QueryBuilder.insert_to_table(table_name, record_or_records)
-    timeout = Map.get(options, :timeout, @default_timeout_ms)
-
-    execute_sql(connection, final_sql, timeout)
+    execute_sql(connection, final_sql, options)
   end
 
   def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.query(query, params)
-    timeout = Map.get(options, :timeout, @default_timeout_ms)
-
-    execute_sql(connection, final_sql, timeout)
+    execute_sql(connection, final_sql, options)
   end
 
   def select(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
     final_sql = QueryBuilder.query(query, params) <> "\n FORMAT JSON"
-    timeout = Map.get(options, :timeout, @default_timeout_ms)
-
-    execute_sql(connection, final_sql, timeout)
+    execute_sql(connection, final_sql, options)
   end
 
-  defp execute_sql(connection, final_sql, timeout) do
+  defp execute_sql(connection, final_sql, options) do
+    timeout = Map.get(options, :timeout, @default_timeout_ms)
+
     connection
-    |> Connection.url_from_connection()
+    |> Connection.url_from_connection(options)
     |> HttpClient.post(final_sql, timeout: timeout)
     |> ResponseParser.parse()
   end
