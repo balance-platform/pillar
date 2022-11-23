@@ -10,6 +10,11 @@ defmodule Pillar.TypeConvert.ToElixir do
     convert(type, value)
   end
 
+  def convert("SimpleAggregateFunction" <> function_body, value) do
+    [_, type] = Regex.run(~r/\(\w*, (.*)\)/, function_body)
+    convert(type, value)
+  end
+
   def convert("String", value) do
     value
   end
