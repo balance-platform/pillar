@@ -24,7 +24,7 @@ jobs:
       matrix:
         otp: [23.1.2]
         elixir: [1.11.4, 1.12.0, 1.13.4]
-        clickhouse: [22.5, 22.9.2]
+        clickhouse: [22.5, 22.9.2, 23.1]
     env:
       MIX_ENV: test
       CLICKHOUSE_URL: "http://localhost:8123"

@@ -519,6 +519,9 @@ defmodule PillarTest do
 
       is_ok =
         cond do
+          major >= 23 && atom == :ok && result == "" ->
+            true
+
           major >= 22 && minor >= 6 && atom == :ok && result == "" ->
             true
 
