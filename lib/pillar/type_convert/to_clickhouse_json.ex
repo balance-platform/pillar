@@ -51,6 +51,10 @@ defmodule Pillar.TypeConvert.ToClickhouseJson do
   def convert(param) when is_binary(param) do
     param
   end
+  
+  def convert({:json, param}) do
+    param
+  end
 
   def convert(param) do
     param
