@@ -111,7 +111,7 @@ defmodule Pillar.BulkInsertBufferTest do
     test "on_errors option, dump_to_file -> saves data to file", %{conn: conn} do
       %{"major" => major, "minor" => minor} = version(conn)
 
-      if major >= 22 && minor >= 6 do
+      if (major >= 22 && minor >= 6) or major >= 23 do
         # Clickhouse of this version doesn't return errors on insert becouse of internal queue
         # skip test scenario on this version and newer
         :ok

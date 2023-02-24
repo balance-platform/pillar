@@ -236,6 +236,39 @@ defmodule PillarTest do
                Pillar.query(conn, "SELECT * FROM #{table_name} LIMIT 1 FORMAT JSON")
     end
 
+    test "SimpleAggregateFunction(groupArrayArray, Array(Array(String)))", %{conn: conn} do
+      drop_table_sql = """
+      DROP TABLE IF EXISTS saf_table
+      """
+
+      create_table_sql = """
+      CREATE TABLE IF NOT EXISTS saf_table
+      (
+        `id` String,
+        `strings_array_array` SimpleAggregateFunction(groupArrayArray, Array(Array(String)))
+      )
+      ENGINE = AggregatingMergeTree
+      ORDER BY (id)
+      """
+
+      insert_query_sql = """
+      INSERT INTO saf_table VALUES ('a', array(array('foo', 'bar', 'baz')))
+      """
+
+      select_query_sql = """
+      SELECT strings_array_array FROM saf_table
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, drop_table_sql)
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+      assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
+
+      assert {:ok, [%{"strings_array_array" => [["foo", "bar", "baz"]]}]} =
+               Pillar.select(conn, select_query_sql)
+
+      assert {:ok, ""} = Pillar.query(conn, drop_table_sql)
+    end
+
     test "Date test", %{conn: conn} do
       sql = "SELECT today()"
 
@@ -486,6 +519,9 @@ defmodule PillarTest do
 
       is_ok =
         cond do
+          major >= 23 && atom == :ok && result == "" ->
+            true
+
           major >= 22 && minor >= 6 && atom == :ok && result == "" ->
             true
 
