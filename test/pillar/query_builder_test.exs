@@ -26,6 +26,18 @@ defmodule Pillar.QueryBuilderTest do
              "SELECT * FROM table WHERE lastname = 'Smith' AND birthdate = '1970-03-13'"
   end
 
+  test "#query/2 - pastes boolean params" do
+    sql = "SELECT * FROM table WHERE active = {active} and deleted = {deleted}"
+
+    params = %{
+      active: true,
+      deleted: false
+    }
+
+    assert QueryBuilder.query(sql, params) ==
+             "SELECT * FROM table WHERE active = 1 and deleted = 0"
+  end
+
   describe "insert_to_table/2" do
     test "#insert_to_table/2 - map argument" do
       table_name = "example"

@@ -23,12 +23,9 @@ defmodule Pillar.TypeConvert.ToClickhouse do
     Integer.to_string(param)
   end
 
-  def convert(param) when is_boolean(param) do
-    case param do
-      true -> 1
-      false -> 0
-    end
-  end
+  def convert(true), do: "1"
+
+  def convert(false), do: "0"
 
   def convert(param) when is_atom(param) do
     Atom.to_string(param)
