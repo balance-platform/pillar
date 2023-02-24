@@ -37,8 +37,8 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
     end
 
     test "Bool" do
-      assert ToClickhouse.convert(true) == 1
-      assert ToClickhouse.convert(false) == 0
+      assert ToClickhouse.convert(true) == "1"
+      assert ToClickhouse.convert(false) == "0"
     end
 
     test "DateTime" do
