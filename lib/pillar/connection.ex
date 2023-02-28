@@ -15,6 +15,7 @@ defmodule Pillar.Connection do
           password: String.t(),
           user: String.t(),
           database: String.t(),
+          pool: Finch.name(),
           max_query_size: integer() | nil,
           allow_suspicious_low_cardinality_types: boolean() | nil
         }
@@ -24,6 +25,7 @@ defmodule Pillar.Connection do
             password: nil,
             user: nil,
             database: nil,
+            pool: Pillar.Application.default_finch_instance(),
             max_query_size: nil,
             allow_suspicious_low_cardinality_types: nil
 

@@ -31,10 +31,11 @@ defmodule Pillar do
 
   defp execute_sql(connection, final_sql, options) do
     timeout = Map.get(options, :timeout, @default_timeout_ms)
+    pool = Map.get(options, :pool, connection.pool)
 
     connection
     |> Connection.url_from_connection(options)
-    |> HttpClient.post(final_sql, timeout: timeout)
+    |> HttpClient.post(final_sql, timeout: timeout, pool: pool)
     |> ResponseParser.parse()
   end
 
@@ -47,37 +48,44 @@ defmodule Pillar do
         Keyword.get(unquote(options), :connection_strings)
       end
 
+      defp get_connection do
+        :ets.lookup_element(:pillar_finch_instances, __MODULE__, 2)
+        |> Enum.random()
+      end
+
       defp name do
-        Keyword.get(unquote(options), :name, "PillarPool")
+        Keyword.get(unquote(options), :name, __MODULE__)
       end
 
       defp pool_size() do
-        Keyword.get(unquote(options), :pool_size, 10)
-      end
-
-      defp pool_timeout() do
-        Keyword.get(unquote(options), :pool_timeout, 5_000)
+        Keyword.get(unquote(options), :pool_size, 20)
       end
 
       defp timeout() do
         Keyword.get(unquote(options), :timeout, 5_000)
       end
 
-      defp poolboy_config do
-        [
-          name: {:local, name()},
-          worker_module: Pillar.Pool.Worker,
-          size: pool_size(),
-          max_overflow: Kernel.ceil(pool_size() * 0.3)
-        ]
-      end
-
       def start_link(_opts \\ nil) do
+        finch_instance_name = :"#{to_string(name())}FinchInstance"
+
         children = [
-          :poolboy.child_spec(:worker, poolboy_config(), connection_strings())
+          {Finch,
+           name: finch_instance_name,
+           pools: %{
+             :default => [size: pool_size()]
+           }}
         ]
 
-        opts = [strategy: :one_for_one, name: :"#{name()}.Supervisor"]
+        pools =
+          connection_strings()
+          |> Enum.map(
+            &(Pillar.Connection.new(&1)
+              |> Map.put(:pool, finch_instance_name))
+          )
+
+        :ets.insert(:pillar_finch_instances, {__MODULE__, pools})
+
+        opts = [strategy: :one_for_one, name: name(), id: __MODULE__]
         Supervisor.start_link(children, opts)
       end
 
@@ -86,43 +94,33 @@ defmodule Pillar do
       end
 
       def select(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
-        :poolboy.transaction(
-          name(),
-          fn pid -> GenServer.call(pid, {:select, sql, params, options}, :infinity) end,
-          pool_timeout()
-        )
+        Pillar.select(get_connection(), sql, params, options)
       end
 
       def query(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
-        :poolboy.transaction(
-          name(),
-          fn pid -> GenServer.call(pid, {:query, sql, params, options}, :infinity) end,
-          pool_timeout()
-        )
+        Pillar.query(get_connection(), sql, params, options)
       end
 
+      @deprecated "Use Task.async/1 instead"
       def async_query(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
-        :poolboy.transaction(
-          name(),
-          fn pid -> GenServer.cast(pid, {:query, sql, params, options}) end,
-          pool_timeout()
-        )
+        Task.async(fn ->
+          Pillar.insert(get_connection(), sql, params, options)
+        end)
+
+        :ok
       end
 
       def insert(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
-        :poolboy.transaction(
-          name(),
-          fn pid -> GenServer.call(pid, {:insert, sql, params, options}, :infinity) end,
-          pool_timeout()
-        )
+        Pillar.insert(get_connection(), sql, params, options)
       end
 
+      @deprecated "Use Task.async/1 instead"
       def async_insert(sql, params \\ %{}, options \\ %{timeout: timeout()}) do
-        :poolboy.transaction(
-          name(),
-          fn pid -> GenServer.cast(pid, {:insert, sql, params, options}) end,
-          pool_timeout()
-        )
+        Task.async(fn ->
+          Pillar.insert(get_connection(), sql, params, options)
+        end)
+
+        :ok
       end
 
       def insert_to_table(
@@ -130,31 +128,20 @@ defmodule Pillar do
             record_or_records \\ %{},
             options \\ %{timeout: timeout()}
           ) do
-        :poolboy.transaction(
-          name(),
-          fn pid ->
-            GenServer.call(
-              pid,
-              {:insert_to_table, table_name, record_or_records, options},
-              :infinity
-            )
-          end,
-          pool_timeout()
-        )
+        Pillar.insert_to_table(get_connection(), table_name, record_or_records, options)
       end
 
+      @deprecated "Use Task.async/1 instead"
       def async_insert_to_table(
             table_name,
             record_or_records \\ %{},
             options \\ %{timeout: timeout()}
           ) do
-        :poolboy.transaction(
-          name(),
-          fn pid ->
-            GenServer.cast(pid, {:insert_to_table, table_name, record_or_records, options})
-          end,
-          pool_timeout()
-        )
+        Task.async(fn ->
+          Pillar.insert_to_table(get_connection(), table_name, record_or_records, options)
+        end)
+
+        :ok
       end
     end
   end

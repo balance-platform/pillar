@@ -4,26 +4,22 @@ defmodule Pillar.HttpClient do
   alias Pillar.HttpClient.TransportError
 
   def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
+    pool = Keyword.get(options, :pool)
     timeout = Keyword.get(options, :timeout, 10_000)
 
-    middleware = [
-      Tesla.Middleware.FollowRedirects,
-      {Tesla.Middleware.Timeout, timeout: timeout}
-    ]
-
-    adapter = {Tesla.Adapter.Mint, timeout: timeout, transport_opts: [timeout: timeout]}
-
-    result =
-      middleware
-      |> Tesla.client(adapter)
-      |> Tesla.post(url, post_body, [])
-
-    response_to_app_structure(result)
+    Finch.build(
+      :post,
+      url,
+      [],
+      post_body
+    )
+    |> Finch.request(pool, receive_timeout: timeout)
+    |> response_to_app_structure()
   end
 
   defp response_to_app_structure(response_tuple) do
     case response_tuple do
-      {:ok, %Tesla.Env{status: status_code, headers: headers, body: body}} ->
+      {:ok, %Finch.Response{status: status_code, headers: headers, body: body}} ->
         %Response{
           status_code: status_code,
           body: format_body(body),
