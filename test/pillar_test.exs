@@ -483,6 +483,32 @@ defmodule PillarTest do
               ]}
   end
 
+  test "JSON test", %{conn: conn} do
+    test_json_map = %{"key" => "value", "int_key" => 5, "float_key" => 4.5}
+    table_name = "json_test_#{@timestamp}"
+
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS #{table_name} (field JSON) ENGINE = Memory
+    """
+
+    assert {:error, %Pillar.HttpClient.Response{status_code: 500}} =
+             Pillar.query(conn, create_table_sql)
+
+    assert {:ok, ""} =
+             Pillar.query(conn, create_table_sql, %{}, %{allow_experimental_object_type: true})
+
+    assert {:ok, ""} =
+             Pillar.insert_to_table(conn, table_name, %{
+               "field" => {:json, test_json_map}
+             })
+
+    assert {:ok, [%{"field" => %{"key" => "value", "int_key" => 5, "float_key" => 4.5}}]} =
+             Pillar.select(conn, "SELECT * FROM #{table_name} LIMIT 1")
+
+    assert {:ok, [%{"field.key" => "value"}]} =
+             Pillar.select(conn, "SELECT field.key FROM #{table_name} LIMIT 1")
+  end
+
   test "IP tests", %{conn: conn} do
     sql =
       "SELECT toIPv4('1.1.1.1') as ip4, toIPv6('2001:db8::8a2e:370:7334') as ip6, toIPv4('2.2.2.2') == toIPv4({ip}) as matches"
