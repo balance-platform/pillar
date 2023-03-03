@@ -146,6 +146,19 @@ defmodule Pillar.TypeConvert.ToElixir do
     Keyword.new(pairs, fn {k, v} -> {String.to_atom(k), v} end)
   end
 
+  def convert("Tuple" <> schema, values) do
+    key_types =
+      schema
+      |> String.trim_leading("(")
+      |> String.trim_trailing(")")
+      |> String.split(", ")
+
+    Enum.reduce(Enum.zip(key_types, values), %{}, fn {key_type, value}, acc ->
+      [key, type] = String.split(key_type)
+      Map.put(acc, key, convert(type, value))
+    end)
+  end
+
   defp convert_datetime_with_timezone(value, time_zone) do
     [date, time] = String.split(value, " ")
 

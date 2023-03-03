@@ -71,11 +71,7 @@ defmodule Pillar.Connection do
           @boolean_to_clickhouse[connect_config.allow_suspicious_low_cardinality_types]
       })
 
-    params =
-      case Map.fetch(options, :db_side_batch_insertions) do
-        {:ok, true} -> Map.put(params, "async_insert", 1)
-        _ -> params
-      end
+    params = parse_options(params, options)
 
     uri_struct = %URI{
       host: connect_config.host,
@@ -87,6 +83,18 @@ defmodule Pillar.Connection do
 
     URI.to_string(uri_struct)
   end
+
+  defp parse_options(params, %{db_side_batch_insertions: true} = options) do
+    Map.put(params, "async_insert", 1)
+    |> parse_options(Map.delete(options, :db_side_batch_insertions))
+  end
+
+  defp parse_options(params, %{allow_experimental_object_type: true} = options) do
+    Map.put(params, "allow_experimental_object_type", 1)
+    |> parse_options(Map.delete(options, :allow_experimental_object_type))
+  end
+
+  defp parse_options(params, _options), do: params
 
   defp nil_or_string_to_int(value) do
     if is_nil(value) do
