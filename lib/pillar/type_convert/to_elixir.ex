@@ -151,9 +151,9 @@ defmodule Pillar.TypeConvert.ToElixir do
       schema
       |> String.trim_leading("(")
       |> String.trim_trailing(")")
-      |> String.split(", ")
+      |> String.split([", "])
 
-    Enum.reduce(Enum.zip(key_types, values), %{}, fn {key_type, value}, acc ->
+    Enum.reduce(Enum.zip(key_types, values), %{}, fn {key_type, {_key, value}}, acc ->
       [key, type] = String.split(key_type)
       Map.put(acc, key, convert(type, value))
     end)

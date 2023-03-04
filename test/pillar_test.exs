@@ -484,29 +484,35 @@ defmodule PillarTest do
   end
 
   test "JSON test", %{conn: conn} do
-    test_json_map = %{"key" => "value", "int_key" => 5, "float_key" => 4.5}
-    table_name = "json_test_#{@timestamp}"
+    %{"major" => major} = version(conn)
 
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS #{table_name} (field JSON) ENGINE = Memory
-    """
+    if major >= 23 do
+      test_json_map = %{"key" => "value", "int_key" => 5, "float_key" => 4.5}
+      table_name = "json_test_#{@timestamp}"
 
-    assert {:error, %Pillar.HttpClient.Response{status_code: 500}} =
-             Pillar.query(conn, create_table_sql)
+      create_table_sql = """
+      CREATE TABLE IF NOT EXISTS #{table_name} (field JSON) ENGINE = Memory
+      """
 
-    assert {:ok, ""} =
-             Pillar.query(conn, create_table_sql, %{}, %{allow_experimental_object_type: true})
+      {:error, %Pillar.HttpClient.Response{status_code: status}} =
+        Pillar.query(conn, create_table_sql)
 
-    assert {:ok, ""} =
-             Pillar.insert_to_table(conn, table_name, %{
-               "field" => {:json, test_json_map}
-             })
+      if status == 500 do
+        assert {:ok, ""} =
+                 Pillar.query(conn, create_table_sql, %{}, %{allow_experimental_object_type: true})
 
-    assert {:ok, [%{"field" => %{"key" => "value", "int_key" => 5, "float_key" => 4.5}}]} =
-             Pillar.select(conn, "SELECT * FROM #{table_name} LIMIT 1")
+        assert {:ok, ""} =
+                 Pillar.insert_to_table(conn, table_name, %{
+                   "field" => {:json, test_json_map}
+                 })
 
-    assert {:ok, [%{"field.key" => "value"}]} =
-             Pillar.select(conn, "SELECT field.key FROM #{table_name} LIMIT 1")
+        assert {:ok, [%{"field" => %{"key" => "value", "int_key" => 5, "float_key" => 4.5}}]} =
+                 Pillar.select(conn, "SELECT * FROM #{table_name} LIMIT 1")
+
+        assert {:ok, [%{"field.key" => "value"}]} =
+                 Pillar.select(conn, "SELECT field.key FROM #{table_name} LIMIT 1")
+      end
+    end
   end
 
   test "IP tests", %{conn: conn} do
