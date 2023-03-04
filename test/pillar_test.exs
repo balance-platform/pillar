@@ -7,6 +7,13 @@ defmodule PillarTest do
 
   @timestamp DateTime.to_unix(DateTime.utc_now())
 
+  defmodule PillarWorker do
+    use Pillar,
+      connection_strings: List.wrap(Application.get_env(:pillar, :connection_url)),
+      name: __MODULE__,
+      pool_size: 3
+  end
+
   setup do
     Calendar.put_time_zone_database(Tzdata.TimeZoneDatabase)
 
@@ -16,19 +23,12 @@ defmodule PillarTest do
     {:ok, %{conn: connection}}
   end
 
+  setup_all do
+    start_supervised!(PillarWorker)
+    :ok
+  end
+
   describe "GenServer tests" do
-    defmodule PillarWorker do
-      use Pillar,
-        connection_strings: List.wrap(Application.get_env(:pillar, :connection_url)),
-        name: __MODULE__,
-        pool_size: 3
-    end
-
-    setup do
-      PillarWorker.start_link()
-      :ok
-    end
-
     test "#query - without passing connection" do
       assert PillarWorker.query("SELECT 1 FORMAT JSON") == {:ok, [%{"1" => 1}]}
     end
@@ -98,6 +98,38 @@ defmodule PillarTest do
 
       assert {:ok, [%{"field" => "0123456789"}]} =
                PillarWorker.select("SELECT * FROM insert_with_select_#{@timestamp}")
+    end
+  end
+
+  describe "Finch instance tests" do
+    test "Uses the default Finch instance when no module is specified", %{conn: conn} do
+      ref = :telemetry_test.attach_event_handlers(self(), [[:finch, :request, :start]])
+      finch_instance = Pillar.Application.default_finch_instance()
+      assert Pillar.query(conn, "SELECT 1 FORMAT JSON") == {:ok, [%{"1" => 1}]}
+
+      assert_received {
+        [:finch, :request, :start],
+        ^ref,
+        _measurement,
+        %{
+          name: ^finch_instance
+        }
+      }
+    end
+
+    test "Uses the correct Finch instance when using module" do
+      ref = :telemetry_test.attach_event_handlers(self(), [[:finch, :request, :start]])
+      assert PillarWorker.query("SELECT 1 FORMAT JSON") == {:ok, [%{"1" => 1}]}
+      finch_instance = PillarTest.PillarWorkerFinchInstance
+
+      assert_received {
+        [:finch, :request, :start],
+        ^ref,
+        _measurement,
+        %{
+          name: ^finch_instance
+        }
+      }
     end
   end
 
