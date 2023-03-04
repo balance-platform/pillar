@@ -8,6 +8,3 @@ defmodule PillarTestPoolWorker do
 end
 
 PillarTestPoolWorker.start_link()
-sql = "ALTER TABLE pillar_migrations DELETE WHERE migration == migration"
-
-{:ok, _result} = PillarTestPoolWorker.query(sql)
