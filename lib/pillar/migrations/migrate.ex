@@ -16,7 +16,7 @@ defmodule Pillar.Migrations.Migrate do
     end)
   end
 
-  def migrate_if_was_not_migrated(connection, migration_name, sql, options \\ %{}) do
+  def migrate_if_was_not_migrated(connection, migration_name, sql, options) do
     {:ok, [%{"qty" => count}]} =
       Pillar.select(
         connection,

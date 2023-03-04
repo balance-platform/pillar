@@ -116,8 +116,20 @@ end
 
 ### Migrations
 
-Migrations can be generated with mix task `mix pillar.gen.migration
-migration_name`.
+Migrations can be generated with mix task `mix pillar.gen.migration migration_name`.
+
+Multi-statement migration Example for this [UseCase](https://github.com/balance-platform/pillar/issues/61)
+
+```elixir
+defmodule Pillar.Migrations.CreateMultipleTables do
+  def up do
+    # for MultiStatement migration result of this function should be List of Strings  
+    (0..4) |> Enum.map(fn i ->
+      "CREATE TABLE IF NOT EXISTS shard_#{i} (field FixedString(10)) ENGINE = Memory"
+    end)
+  end
+end
+```
 
 ```bash
 mix pillar.gen.migration events_table

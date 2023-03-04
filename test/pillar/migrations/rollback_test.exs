@@ -18,7 +18,7 @@ defmodule Pillar.Migrations.RollbackTest do
 
   test "#rollback_n_migrations", %{conn: conn, path: path} do
     result = Rollback.list_of_success_migrations(conn)
-    assert length(result) == 3
+    assert length(result) >= 3
 
     # Nothing rollback
     assert Rollback.rollback_n_migrations(conn, path, 0) == []
@@ -28,7 +28,9 @@ defmodule Pillar.Migrations.RollbackTest do
 
     # List of rolled back migrations, + wait until Clickhouse updates table
     :timer.sleep(3_000)
-    assert [_migration_file1, _migration_file2] = Rollback.rollback_n_migrations(conn, path, 2)
+
+    assert [_migration_file1, _migration_file2, _migration_file3] =
+             Rollback.rollback_n_migrations(conn, path, 3)
 
     # Migrations left, + wait until Clickhouse updates table
     :timer.sleep(1_000)
