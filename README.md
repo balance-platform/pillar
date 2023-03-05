@@ -18,6 +18,7 @@ Online Analytical Processing (OLAP) database management system.
   - [Buffer for periodical bulk inserts](#buffer-for-periodical-bulk-inserts)
   - [Migrations](#migrations)
   - [DateTime Timezones](#timezones)
+  - [Switching between HTTP adapters](#http-adapters)
 
 ## Usage
 
@@ -163,6 +164,17 @@ config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
 ```
 
 Details here https://hexdocs.pm/elixir/1.12/DateTime.html#module-time-zone-database
+
+### HTTP Adapters
+
+If you have problems with default Pillar HTTP Adapter (Mint over Tesla), you can use alternative one, based on :httpc or define your own and pass it
+through config.
+
+```
+config :pillar, Pillar.HttpClient, http_adapter: Pillar.HttpClient.TeslaMintAdapter
+```
+
+Adapter should define one function `post/3` and return 2 possible results (`%Pillar.HttpClient.Response{}`, `%Pillar.HttpClient.TransportError{}`)
 
 # Contribution
 
