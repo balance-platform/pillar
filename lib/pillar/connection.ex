@@ -41,10 +41,13 @@ defmodule Pillar.Connection do
   def new(str) do
     uri = URI.parse(str)
 
+    info = uri.userinfo
+
     [user, password] =
-      case uri.userinfo do
-        nil -> [nil, nil]
-        _str -> String.split(uri.userinfo, ":")
+      cond do
+        is_nil(info) -> [nil, nil]
+        not String.contains?(info, ":") -> [info, nil]
+        :else -> String.split(info, ":")
       end
 
     params = URI.decode_query(uri.query || "")
