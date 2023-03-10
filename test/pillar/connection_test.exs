@@ -17,6 +17,17 @@ defmodule Pillar.ConnectionTest do
              )
   end
 
+  test "#new - user without password" do
+    assert %Connection{
+             database: "default",
+             host: "localhost",
+             scheme: "http",
+             user: "alice",
+             password: nil,
+             port: 8123
+           } == Connection.new("http://alice@localhost:8123")
+  end
+
   test "#new - minimum required params" do
     assert %Connection{
              database: "default",
