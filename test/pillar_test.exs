@@ -321,6 +321,18 @@ defmodule PillarTest do
       end
     end
 
+    test "Decimal subtypes test", %{conn: conn} do
+      sql = "SELECT toDecimal32(2.23, 4) AS x"
+
+      expected = Decimal.new("2.23")
+      assert {:ok, [%{"x" => ^expected}]} = Pillar.select(conn, sql)
+
+      sql = "SELECT toDecimal64(2, 4) AS x"
+
+      expected = Decimal.new("2")
+      assert {:ok, [%{"x" => ^expected}]} = Pillar.select(conn, sql)
+    end
+
     test "DateTime test", %{conn: conn} do
       sql = "SELECT now()"
 
@@ -368,7 +380,9 @@ defmodule PillarTest do
       assert {:ok, ""} = Pillar.query(conn, create_table_sql)
       assert {:ok, ""} = Pillar.query(conn, insert_query_sql)
 
-      assert {:ok, [%{"field" => 500_000.05}]} =
+      expected = Decimal.new("500000.05")
+
+      assert {:ok, [%{"field" => ^expected}]} =
                Pillar.select(conn, "SELECT * FROM decimal_table_#{@timestamp} LIMIT 1")
     end
 

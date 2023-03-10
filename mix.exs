@@ -43,6 +43,7 @@ defmodule Pillar.MixProject do
       {:mint, "~> 1.4"},
       {:castore, "~> 0.1"},
       {:poolboy, "~> 1.5"},
+      {:decimal, "~> 2.0", optional: true},
       {:tzdata, "~> 1.1", only: [:dev, :test]},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
