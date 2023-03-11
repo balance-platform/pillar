@@ -331,6 +331,10 @@ defmodule PillarTest do
       sql = "SELECT (1, 2) as fst, (2, 3) as snd"
 
       assert {:ok, [%{"fst" => [1, 2], "snd" => [2, 3]}]} = Pillar.select(conn, sql)
+
+      sql = "SELECT (now(), '1') as fst"
+
+      assert {:ok, [%{"fst" => [%DateTime{}, "1"]}]} = Pillar.select(conn, sql)
     end
 
     test "Insert DateTime test", %{conn: conn} do
