@@ -154,8 +154,13 @@ defmodule Pillar.TypeConvert.ToElixir do
       |> String.split([", "])
 
     Enum.zip(key_types, values)
-    |> Enum.map(fn {key_type, value} ->
-      convert(key_type, value)
+    |> Enum.map(fn
+      {key_type, {_key, value}} ->
+        [_key, type] = String.split(key_type)
+        convert(type, value)
+
+      {key_type, value} ->
+        convert(key_type, value)
     end)
   end
 
