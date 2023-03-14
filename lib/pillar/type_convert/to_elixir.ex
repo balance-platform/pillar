@@ -138,17 +138,11 @@ defmodule Pillar.TypeConvert.ToElixir do
     value
   end
 
-  if Code.ensure_loaded?(Decimal) do
-    def convert("Decimal" <> _decimal_subtypes, value) when is_integer(value),
-      do: Decimal.new(value)
+  def convert("Decimal" <> _decimal_subtypes, value) when is_integer(value),
+    do: Decimal.new(value)
 
-    def convert("Decimal" <> _decimal_subtypes, value) when is_float(value),
-      do: Decimal.from_float(value)
-  else
-    def convert("Decimal" <> _decimal_subtypes, value) do
-      value
-    end
-  end
+  def convert("Decimal" <> _decimal_subtypes, value) when is_float(value),
+    do: Decimal.from_float(value)
 
   def convert("Map" <> _key_values_types, pairs) do
     Keyword.new(pairs, fn {k, v} -> {String.to_atom(k), v} end)
