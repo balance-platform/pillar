@@ -161,25 +161,23 @@ defmodule Pillar.TypeConvert.ToElixir do
     end)
   end
 
-  if Code.ensure_loaded?(DateTime) && function_exported?(DateTime, :new, 3) do
-    defp convert_datetime_with_timezone(_value, _time_zone) do
-      {:error, "feature needs elixir v1.11 minimum"}
-    end
-  else
-    defp convert_datetime_with_timezone(value, time_zone) do
-      [date, time] = String.split(value, " ")
+  defp convert_datetime_with_timezone(value, time_zone) do
+    [date, time] = String.split(value, " ")
 
-      case DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone) do
-        {:ok, datetime} ->
-          datetime
+    case Code.ensure_loaded?(DateTime) && function_exported?(DateTime, :new, 3) &&
+           DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone) do
+      false ->
+        {:error, "feature needs elixir v1.11 minimum"}
 
-        {:error, :utc_only_time_zone_database} ->
-          Logger.warn(
-            "Add timezone database to your project if you want to use Timezones (tzdata or tz)."
-          )
+      {:ok, datetime} ->
+        datetime
 
-          {:error, :utc_only_time_zone_database}
-      end
+      {:error, :utc_only_time_zone_database} ->
+        Logger.warn(
+          "Add timezone database to your project if you want to use Timezones (tzdata or tz)."
+        )
+
+        {:error, :utc_only_time_zone_database}
     end
   end
 
