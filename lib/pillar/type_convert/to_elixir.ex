@@ -138,9 +138,11 @@ defmodule Pillar.TypeConvert.ToElixir do
     value
   end
 
-  def convert("Decimal" <> _decimal_subtypes, value) do
-    value
-  end
+  def convert("Decimal" <> _decimal_subtypes, value) when is_integer(value),
+    do: Decimal.new(value)
+
+  def convert("Decimal" <> _decimal_subtypes, value) when is_float(value),
+    do: Decimal.from_float(value)
 
   def convert("Map" <> _key_values_types, pairs) do
     Keyword.new(pairs, fn {k, v} -> {String.to_atom(k), v} end)
@@ -162,7 +164,7 @@ defmodule Pillar.TypeConvert.ToElixir do
   defp convert_datetime_with_timezone(value, time_zone) do
     [date, time] = String.split(value, " ")
 
-    case Code.ensure_loaded(DateTime) && function_exported?(DateTime, :new, 3) &&
+    case Code.ensure_loaded?(DateTime) && function_exported?(DateTime, :new, 3) &&
            DateTime.new(Date.from_iso8601!(date), Time.from_iso8601!(time), time_zone) do
       false ->
         {:error, "feature needs elixir v1.11 minimum"}
