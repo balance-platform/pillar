@@ -153,15 +153,24 @@ defmodule Pillar.TypeConvert.ToElixir do
       |> String.trim_trailing(")")
       |> String.split([", "])
 
-    Enum.zip(key_types, values)
-    |> Enum.map(fn
-      {key_type, {_key, value}} ->
-        [_key, type] = String.split(key_type)
-        convert(type, value)
+    acc = %{res: [], type: nil}
 
-      {key_type, value} ->
-        convert(key_type, value)
+    Enum.zip(key_types, values)
+    |> Enum.reduce(acc, fn
+      {key_type, {_key, value}}, acc ->
+        [key, type] = String.split(key_type)
+        elem = {key, convert(type, value)}
+        res = [elem | acc.res]
+        %{res: res, type: :map}
+
+      {key_type, value}, acc ->
+        res = [convert(key_type, value) | acc.res]
+        %{res: res, type: :list}
     end)
+    |> case do
+      %{type: :list, res: res} -> Enum.reverse(res)
+      %{type: :map, res: res} -> Map.new(res)
+    end
   end
 
   defp convert_datetime_with_timezone(value, time_zone) do
