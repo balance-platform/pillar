@@ -63,11 +63,17 @@ defmodule Pillar.Connection do
     }
   end
 
+  def headers_from_connection(%__MODULE__{} = connect_config) do
+    [
+      {"X-ClickHouse-User", connect_config.user},
+      {"X-ClickHouse-Key", connect_config.password}
+    ]
+    |> Enum.reject(fn {_k, v} -> is_nil(v) end)
+  end
+
   def url_from_connection(%__MODULE__{} = connect_config, options \\ %{}) do
     params =
       reject_nils(%{
-        password: connect_config.password,
-        user: connect_config.user,
         database: connect_config.database,
         max_query_size: connect_config.max_query_size,
         allow_suspicious_low_cardinality_types:

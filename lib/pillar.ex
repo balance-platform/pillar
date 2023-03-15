@@ -31,10 +31,11 @@ defmodule Pillar do
 
   defp execute_sql(connection, final_sql, options) do
     timeout = Map.get(options, :timeout, @default_timeout_ms)
+    headers = Connection.headers_from_connection(connection)
 
     connection
     |> Connection.url_from_connection(options)
-    |> HttpClient.post(final_sql, timeout: timeout)
+    |> HttpClient.post(final_sql, headers, timeout: timeout)
     |> ResponseParser.parse()
   end
 

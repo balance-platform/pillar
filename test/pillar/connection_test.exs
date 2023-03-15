@@ -51,7 +51,7 @@ defmodule Pillar.ConnectionTest do
       }
 
       assert Connection.url_from_connection(connection) ==
-               "https://localhost:8123/?database=default&password=password&user=user"
+               "https://localhost:8123/?database=default"
     end
 
     test "build valid url (no credentials and database)" do
@@ -75,17 +75,56 @@ defmodule Pillar.ConnectionTest do
       }
 
       assert Connection.url_from_connection(connection) ==
-               "https://localhost:8123/?database=default&password=password&user=user"
+               "https://localhost:8123/?database=default"
 
       options = %{db_side_batch_insertions: true}
 
       assert Connection.url_from_connection(connection, options) ==
-               "https://localhost:8123/?database=default&password=password&user=user&async_insert=1"
+               "https://localhost:8123/?database=default&async_insert=1"
 
       options = %{db_side_batch_insertions: false}
 
       assert Connection.url_from_connection(connection, options) ==
-               "https://localhost:8123/?database=default&password=password&user=user"
+               "https://localhost:8123/?database=default"
+    end
+  end
+
+  describe "#headers_from_connection" do
+    test "user and password passed" do
+      connection = %Connection{
+        database: "default",
+        host: "localhost",
+        scheme: "https",
+        user: "user",
+        password: "password",
+        port: 8123
+      }
+
+      assert Connection.headers_from_connection(connection) == [
+               {"X-ClickHouse-User", "user"},
+               {"X-ClickHouse-Key", "password"}
+             ]
+    end
+
+    test "only user passed" do
+      connection = %Connection{
+        host: "localhost",
+        scheme: "https",
+        user: "user",
+        port: 8123
+      }
+
+      assert Connection.headers_from_connection(connection) == [{"X-ClickHouse-User", "user"}]
+    end
+
+    test "no credentials passed" do
+      connection = %Connection{
+        host: "localhost",
+        scheme: "https",
+        port: 8123
+      }
+
+      assert Connection.headers_from_connection(connection) == []
     end
   end
 end
