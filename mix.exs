@@ -39,9 +39,9 @@ defmodule Pillar.MixProject do
   defp deps do
     [
       {:jason, ">= 1.0.0"},
-      {:tesla, "~> 1.4.0"},
-      {:mint, "~> 1.4"},
-      {:castore, "~> 0.1"},
+      {:tesla, ">= 1.4.0"},
+      {:mint, ">= 1.4.0"},
+      {:castore, ">= 0.1.0"},
       {:poolboy, "~> 1.5"},
       {:decimal, ">= 1.0.0"},
       {:tzdata, "~> 1.1", only: [:dev, :test]},
