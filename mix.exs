@@ -38,6 +38,8 @@ defmodule Pillar.MixProject do
 
   defp deps do
     [
+      {:db_connection, "~> 2.0"},
+      {:ecto_sql, "~> 3.9"},
       {:jason, ">= 1.0.0"},
       {:tesla, "~> 1.4.0"},
       {:mint, "~> 1.4"},
