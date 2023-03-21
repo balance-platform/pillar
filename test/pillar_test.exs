@@ -693,6 +693,26 @@ defmodule PillarTest do
                Pillar.select(conn, "select * from #{table_name}")
     end
 
+    test "insert keyword as decimal", %{conn: conn} do
+      table_name = "to_table_inserts_decimal_#{@timestamp}"
+
+      create_table_sql = """
+        CREATE TABLE IF NOT EXISTS #{table_name} (
+          field1 Decimal32(4),
+        ) ENGINE = Memory
+      """
+
+      assert {:ok, ""} = Pillar.query(conn, create_table_sql)
+
+      record = %{
+        "field1" => Decimal.new(1)
+      }
+
+      assert {:ok, ""} = Pillar.insert_to_table(conn, table_name, [record])
+
+      assert {:ok, [^record]} = Pillar.select(conn, "select * from #{table_name}")
+    end
+
     test "insert keyword as map", %{conn: conn} do
       %{"major" => major} = version(conn)
 

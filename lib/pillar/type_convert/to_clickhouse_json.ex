@@ -1,4 +1,6 @@
 defmodule Pillar.TypeConvert.ToClickhouseJson do
+  require Decimal
+
   @moduledoc false
   def convert(param) when is_list(param) do
     if !Enum.empty?(param) && Keyword.keyword?(param) do
@@ -22,6 +24,10 @@ defmodule Pillar.TypeConvert.ToClickhouseJson do
   end
 
   def convert(nil), do: nil
+
+  def convert(param) when Decimal.is_decimal(param) do
+    Decimal.to_float(param)
+  end
 
   def convert(param) when is_atom(param) do
     Atom.to_string(param)
