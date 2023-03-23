@@ -26,7 +26,7 @@ defmodule Pillar.TypeConvert.ToClickhouseJson do
   def convert(nil), do: nil
 
   def convert(param) when Decimal.is_decimal(param) do
-    Decimal.to_float(param)
+    Decimal.to_string(param)
   end
 
   def convert(param) when is_atom(param) do

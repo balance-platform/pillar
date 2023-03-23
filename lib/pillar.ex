@@ -16,6 +16,14 @@ defmodule Pillar do
   def insert_to_table(%Connection{} = connection, table_name, record_or_records, options \\ %{})
       when is_binary(table_name) do
     final_sql = QueryBuilder.insert_to_table(table_name, record_or_records)
+
+    options =
+      if has_input_format_json_read_numbers_as_strings?(connection.version) do
+        Map.put(options, :input_format_json_read_numbers_as_strings, true)
+      else
+        options
+      end
+
     execute_sql(connection, final_sql, options)
   end
 
@@ -36,6 +44,14 @@ defmodule Pillar do
     |> Connection.url_from_connection(options)
     |> HttpClient.post(final_sql, timeout: timeout)
     |> ResponseParser.parse()
+  end
+
+  defp has_input_format_json_read_numbers_as_strings?(version) do
+    cond do
+      is_nil(version) -> false
+      Version.compare(version, "23.0.0") != :lt -> true
+      :else -> false
+    end
   end
 
   defmacro __using__(options) do

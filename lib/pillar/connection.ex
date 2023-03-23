@@ -16,7 +16,8 @@ defmodule Pillar.Connection do
           user: String.t(),
           database: String.t(),
           max_query_size: integer() | nil,
-          allow_suspicious_low_cardinality_types: boolean() | nil
+          allow_suspicious_low_cardinality_types: boolean() | nil,
+          version: Version.t()
         }
   defstruct host: nil,
             port: nil,
@@ -25,7 +26,8 @@ defmodule Pillar.Connection do
             user: nil,
             database: nil,
             max_query_size: nil,
-            allow_suspicious_low_cardinality_types: nil
+            allow_suspicious_low_cardinality_types: nil,
+            version: nil
 
   @doc """
   Generates Connection from typical connection string:
@@ -61,6 +63,7 @@ defmodule Pillar.Connection do
       password: password,
       max_query_size: nil_or_string_to_int(params["max_query_size"])
     }
+    |> add_version()
   end
 
   def url_from_connection(%__MODULE__{} = connect_config, options \\ %{}) do
@@ -87,6 +90,18 @@ defmodule Pillar.Connection do
     URI.to_string(uri_struct)
   end
 
+  defp add_version(conn) do
+    {:ok, version} = Pillar.query(conn, "select version();")
+
+    version =
+      String.replace(version, "\n", "")
+      |> String.split(".")
+      |> Enum.take(3)
+      |> Enum.join(".")
+
+    %{conn | version: Version.parse!(version)}
+  end
+
   defp parse_options(params, %{db_side_batch_insertions: true} = options) do
     Map.put(params, "async_insert", 1)
     |> parse_options(Map.delete(options, :db_side_batch_insertions))
@@ -95,6 +110,11 @@ defmodule Pillar.Connection do
   defp parse_options(params, %{allow_experimental_object_type: true} = options) do
     Map.put(params, "allow_experimental_object_type", 1)
     |> parse_options(Map.delete(options, :allow_experimental_object_type))
+  end
+
+  defp parse_options(params, %{input_format_json_read_numbers_as_strings: true} = options) do
+    Map.put(params, "input_format_json_read_numbers_as_strings", 1)
+    |> parse_options(Map.delete(options, :input_format_json_read_numbers_as_strings))
   end
 
   defp parse_options(params, _options), do: params
