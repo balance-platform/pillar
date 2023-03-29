@@ -3,6 +3,8 @@ defmodule Pillar.Connection do
   Structure with connection config, such as host, port, user, password and other
   """
 
+  require Logger
+
   @boolean_to_clickhouse %{
     true => 1,
     false => 0
@@ -91,15 +93,21 @@ defmodule Pillar.Connection do
   end
 
   defp add_version(conn) do
-    {:ok, version} = Pillar.query(conn, "select version();")
+    case Pillar.query(conn, "select version();") do
+      {:ok, version} ->
+        version =
+          String.replace(version, "\n", "")
+          |> String.split(".")
+          |> Enum.take(3)
+          |> Enum.join(".")
 
-    version =
-      String.replace(version, "\n", "")
-      |> String.split(".")
-      |> Enum.take(3)
-      |> Enum.join(".")
+        %{conn | version: Version.parse!(version)}
 
-    %{conn | version: Version.parse!(version)}
+      {:error, msg} ->
+        Logger.error("Failed to get version of clickhouse database #{inspect(msg)}")
+
+        conn
+    end
   end
 
   defp parse_options(params, %{db_side_batch_insertions: true} = options) do
