@@ -698,9 +698,11 @@ defmodule PillarTest do
 
       create_table_sql = """
         CREATE TABLE IF NOT EXISTS #{table_name} (
-          field1 Decimal32(4),
+          field1 Decimal32(4)
         ) ENGINE = Memory
       """
+
+      %{"major" => major} = version(conn)
 
       assert {:ok, ""} = Pillar.query(conn, create_table_sql)
 
@@ -708,9 +710,20 @@ defmodule PillarTest do
         "field1" => Decimal.new(1)
       }
 
-      assert {:ok, ""} = Pillar.insert_to_table(conn, table_name, [record])
+      if major >= 23 do
+        assert {:ok, ""} = Pillar.insert_to_table(conn, table_name, [record])
+        assert {:ok, [^record]} = Pillar.select(conn, "select * from #{table_name}")
+      else
+        assert_raise RuntimeError, fn ->
+          Pillar.insert_to_table(conn, table_name, [record])
+        end
 
-      assert {:ok, [^record]} = Pillar.select(conn, "select * from #{table_name}")
+        Pillar.insert_to_table(conn, table_name, [record], %{
+          query_options: %{decimal_as_float: true}
+        })
+
+        assert {:ok, [^record]} = Pillar.select(conn, "select * from #{table_name}")
+      end
     end
 
     test "insert keyword as map", %{conn: conn} do

@@ -10,8 +10,9 @@ defmodule Pillar.ConnectionTest do
              user: "user",
              password: "password",
              port: 8123,
-             max_query_size: 1024
-           } ==
+             max_query_size: 1024,
+             version: _
+           } =
              Connection.new(
                "https://user:password@localhost:8123/some_database?max_query_size=1024"
              )
@@ -24,8 +25,9 @@ defmodule Pillar.ConnectionTest do
              scheme: "http",
              user: "alice",
              password: nil,
-             port: 8123
-           } == Connection.new("http://alice@localhost:8123")
+             port: 8123,
+             version: _
+           } = Connection.new("http://alice@localhost:8123")
   end
 
   test "#new - minimum required params" do
@@ -35,8 +37,9 @@ defmodule Pillar.ConnectionTest do
              scheme: "http",
              user: nil,
              password: nil,
-             port: 8123
-           } == Connection.new("http://localhost:8123")
+             port: 8123,
+             version: _
+           } = Connection.new("http://localhost:8123")
   end
 
   describe "#url_from_connection" do

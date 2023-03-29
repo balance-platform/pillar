@@ -65,7 +65,7 @@ defmodule Pillar.QueryBuilderTest do
                "FORMAT JSONEachRow",
                "{\"field_1\":\"1\",\"field_2\":\"2\",\"field_3\":\"3\"} {\"field_2\":\"2\",\"field_3\":\"4\"} {\"field_1\":\"1\"} {\"field_2\":\"2\"} {\"field_3\":\"4\"} {}"
              ] ==
-               String.split(QueryBuilder.insert_to_table(table_name, values), "\n")
+               String.split(QueryBuilder.insert_to_table(table_name, values, nil), "\n")
     end
   end
 end
