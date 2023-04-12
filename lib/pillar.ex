@@ -5,6 +5,7 @@ defmodule Pillar do
   alias Pillar.HttpClient
   alias Pillar.QueryBuilder
   alias Pillar.ResponseParser
+  alias Pillar.Util
 
   @default_timeout_ms 5_000
 
@@ -13,9 +14,25 @@ defmodule Pillar do
     execute_sql(connection, final_sql, options)
   end
 
-  def insert_to_table(%Connection{} = connection, table_name, record_or_records, options \\ %{})
+  def insert_to_table(
+        %Connection{version: version} = connection,
+        table_name,
+        record_or_records,
+        options \\ %{}
+      )
       when is_binary(table_name) do
-    final_sql = QueryBuilder.insert_to_table(table_name, record_or_records)
+    query_options = Map.get(options, :query_options, %{})
+
+    final_sql =
+      QueryBuilder.insert_to_table(table_name, record_or_records, version, query_options)
+
+    options =
+      if Util.has_input_format_json_read_numbers_as_strings?(version) do
+        Map.put(options, :input_format_json_read_numbers_as_strings, true)
+      else
+        options
+      end
+
     execute_sql(connection, final_sql, options)
   end
 
