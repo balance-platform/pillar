@@ -5,13 +5,13 @@ defmodule Pillar.Ecto.Connection do
     DBConnection.child_spec(Pillar.Ecto.ConnMod, opts)
   end
 
-  def query(conn, query, _, _) when is_binary(query) do
-    query = %Query{name: "", statement: query}
+  def query(conn, query, params, _) when is_binary(query) do
+    query = %Query{name: "", statement: query, params: params}
     execute(conn, query, [], [])
   end
 
   def prepare_execute(conn, name, prepared_query, params, options) do
-    query = %Query{name: name, statement: prepared_query}
+    query = %Query{name: name, statement: prepared_query, params: params}
 
     case DBConnection.prepare_execute(conn, query, params, options) do
       {:ok, query, result} ->

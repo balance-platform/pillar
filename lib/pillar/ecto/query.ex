@@ -22,16 +22,23 @@ defmodule Pillar.Ecto.Query do
 
   @spec all(query :: Ecto.Query.t()) :: String.t()
   def all(query) do
-    all_params = MapSet.new()
-
-    IO.inspect(["query - all", query, query.sources, query.wheres])
-
     sources = QueryBuilder.create_names(query)
+
+    # We now extract all parameters in the query
+    # this should be in the same order as we join the query down below together
+
+    all_params =
+      query.wheres
+      |> Enum.reduce([], fn elem, acc -> QueryBuilder.param_extractor(elem, sources, acc) end)
+      |> Enum.reverse()
+
+    IO.inspect(["all_params", all_params])
+
     IO.inspect(["sources", sources])
     {select_distinct, order_by_distinct} = QueryBuilder.distinct(query.distinct, sources, query)
 
     from = QueryBuilder.from(query, sources)
-    select = QueryBuilder.select(query, select_distinct, sources)
+    {select, all_params} = QueryBuilder.select(query, select_distinct, sources, all_params)
     # join = QueryBuilder.join(query, sources)
     {where, all_params} = QueryBuilder.where(query, sources, all_params)
     {group_by, all_params} = QueryBuilder.group_by(query, sources, all_params)
@@ -40,8 +47,6 @@ defmodule Pillar.Ecto.Query do
     {limit, all_params} = QueryBuilder.limit(query, sources, all_params)
 
     res = [select, from, where, group_by, having, order_by, limit]
-
-    IO.inspect(["END"])
 
     IO.iodata_to_binary(res)
   end
@@ -59,34 +64,33 @@ defmodule Pillar.Ecto.Query do
 end
 
 defimpl DBConnection.Query, for: Pillar.Ecto.Query do
-  def parse(%{statement: statement} = query, _opts) do
-    param_count =
-      statement
-      |> String.codepoints()
-      |> Enum.count(fn s -> s == "?" end)
+  def parse(%{statement: statement, params: params} = query, _opts) do
+    params =
+      Regex.scan(~r/\{\w+_\d:\w+\}*/, statement)
+      |> List.flatten()
+      |> Enum.map(fn param ->
+        [name, _] = Regex.replace(~r/({|})/, param, "") |> String.split(":")
+        name
+      end)
+      |> Enum.zip(params)
+      |> Enum.map(fn {name, value} ->
+        "param_#{name}=#{value}"
+      end)
 
-    %{query | param_count: param_count}
+    %{query | param_count: length(params), params: params}
   end
 
   def describe(query, _opts) do
     query
   end
 
-  def encode(%{type: :insert} = query, _params, _opts), do: raise("Not supported")
+  def encode(%{type: :insert}, _params, _opts), do: raise("Not supported")
 
-  def encode(%{statement: query_part}, params, _opts) do
-    # TODO: ENCODE PARAMS?
-    IO.inspect(["ENCODE QUERY", params])
+  def encode(%{statement: query_part}, _params, _opts) do
     query_part
   end
 
   def decode(_query, result, _opts) do
     result
-  end
-end
-
-defimpl String.Chars, for: Pillar.Ecto.Query do
-  def to_string(%Pillar.Ecto.Query{statement: statement}) do
-    IO.iodata_to_binary(statement)
   end
 end

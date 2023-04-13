@@ -51,8 +51,26 @@ defmodule Pillar.Ecto.ConnMod do
 
   @doc false
   def handle_execute(query, _params, _opts, state) do
-    state.conn
-    |> Connection.url_from_connection()
+    IO.inspect(["QUERY BEFORE CONN", query])
+
+    IO.inspect(["1"])
+
+    params =
+      Enum.join(query.params, "&")
+      |> IO.inspect()
+
+    IO.inspect(["2"])
+
+    url =
+      state.conn
+      |> Connection.url_from_connection()
+      |> IO.inspect()
+
+    url =
+      (url <> "&" <> params)
+      |> IO.inspect()
+
+    url
     |> HttpClient.post(
       query.statement <>
         " FORMAT JSONCompactEachRow SETTINGS date_time_output_format='iso', output_format_json_quote_64bit_integers=0",
