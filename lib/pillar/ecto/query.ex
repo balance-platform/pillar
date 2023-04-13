@@ -58,6 +58,24 @@ defmodule Pillar.Ecto.Query do
   def update_all(_query, _prefix \\ nil), do: raise("Not supported")
 
   def delete_all(_query), do: raise("Not supported")
+
+  defmacro any_ch(field) do
+    quote do
+      fragment("any(?)", unquote(field))
+    end
+  end
+
+  defmacro uniq(field) do
+    quote do
+      fragment("uniq(?)", unquote(field))
+    end
+  end
+
+  defmacro stddevPop(field) do
+    quote do
+      fragment("stddevPop(?)", unquote(field))
+    end
+  end
 end
 
 defimpl DBConnection.Query, for: Pillar.Ecto.Query do

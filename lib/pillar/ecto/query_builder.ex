@@ -330,10 +330,17 @@ defmodule Pillar.Ecto.QueryBuilder do
   end
 
   def expr({:fragment, _, parts}, sources, query, all_params) do
-    Enum.map(parts, fn
-      {:raw, part} -> part
-      {:expr, expr} -> expr(expr, sources, query, all_params)
-    end)
+    {expr, all_params} =
+      Enum.reduce(parts, {[], all_params}, fn
+        {:raw, part}, {acc, all_params} ->
+          {[part | acc], all_params}
+
+        {:expr, expr}, {acc, all_params} ->
+          {expr, all_params} = expr(expr, sources, query, all_params)
+          {[expr | acc], all_params}
+      end)
+
+    {Enum.reverse(expr), all_params}
   end
 
   def expr({fun, _, args}, sources, query, all_params) when is_atom(fun) and is_list(args) do
