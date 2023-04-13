@@ -7,6 +7,7 @@ defmodule Pillar.Ecto.ConnMod do
   alias Pillar.HttpClient
   alias Pillar.HttpClient.Response
   alias Pillar.HttpClient.TransportError
+  alias Pillar.Ecto.Helpers
 
   def connect(opts) do
     url = Keyword.get(opts, :url, "http://localhost:8123")
@@ -51,29 +52,18 @@ defmodule Pillar.Ecto.ConnMod do
 
   @doc false
   def handle_execute(query, _params, _opts, state) do
-    IO.inspect(["QUERY BEFORE CONN", query])
-
-    IO.inspect(["1"])
-
-    params =
-      Enum.join(query.params, "&")
-      |> IO.inspect()
-
-    IO.inspect(["2"])
+    params = Enum.join(query.params, "&")
 
     url =
       state.conn
       |> Connection.url_from_connection()
-      |> IO.inspect()
 
-    url =
-      (url <> "&" <> params)
-      |> IO.inspect()
+    url = url <> "&" <> params
 
     url
     |> HttpClient.post(
       query.statement <>
-        " FORMAT JSONCompactEachRow SETTINGS date_time_output_format='iso', output_format_json_quote_64bit_integers=0",
+        " FORMAT JSONCompactEachRowWithNamesAndTypes SETTINGS date_time_output_format='iso', output_format_json_quote_64bit_integers=0",
       timeout: 60_000
     )
     |> parse()
@@ -83,10 +73,26 @@ defmodule Pillar.Ecto.ConnMod do
 
       {:ok, body} ->
         IO.inspect(["body", body])
-        rows = body |> String.split("\n", trim: true) |> Enum.map(&Jason.decode!(&1))
 
-        IO.inspect(["query", query])
+        [types | rows] =
+          body
+          |> String.split("\n", trim: true)
+          |> Enum.map(&Jason.decode!(&1))
+          |> Enum.drop(1)
+
+        IO.inspect(["types", types])
         IO.inspect(["result", rows])
+
+        rows =
+          rows
+          |> Enum.map(fn row ->
+            Enum.zip(row, types)
+            |> Enum.map(fn {data, type} ->
+              IO.inspect([type, data])
+              Helpers.parse_type(type, data)
+            end)
+          end)
+          |> IO.inspect()
 
         {
           :ok,

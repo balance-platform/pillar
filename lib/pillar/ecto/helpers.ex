@@ -85,7 +85,15 @@ defmodule Pillar.Ecto.Helpers do
     :binary.replace(value, "'", "''", [:global])
   end
 
-  def type_from_value(v) when is_integer(v), do: :integer
+  def parse_type(_, nil), do: nil
+  def parse_type("String", s), do: s
+  def parse_type("LowCardinality(String)", s), do: s
+  def parse_type("UInt32", i), do: i
+  def parse_type("Int32", i), do: i
+  def parse_type("Float32", i), do: i
+  def parse_type("Float64", i), do: i
+  def parse_type("DateTime", s), do: NaiveDateTime.from_iso8601!(s)
+  def parse_type(_, i), do: i
 
   def ecto_to_db({:array, t}), do: "Array(#{ecto_to_db(t)})"
   def ecto_to_db(:id), do: "UInt32"

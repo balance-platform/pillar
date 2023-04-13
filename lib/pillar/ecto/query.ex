@@ -32,9 +32,6 @@ defmodule Pillar.Ecto.Query do
       |> Enum.reduce([], fn elem, acc -> QueryBuilder.param_extractor(elem, sources, acc) end)
       |> Enum.reverse()
 
-    IO.inspect(["all_params", all_params])
-
-    IO.inspect(["sources", sources])
     {select_distinct, order_by_distinct} = QueryBuilder.distinct(query.distinct, sources, query)
 
     from = QueryBuilder.from(query, sources)
@@ -44,7 +41,7 @@ defmodule Pillar.Ecto.Query do
     {group_by, all_params} = QueryBuilder.group_by(query, sources, all_params)
     {having, all_params} = QueryBuilder.having(query, sources, all_params)
     {order_by, all_params} = QueryBuilder.order_by(query, order_by_distinct, sources, all_params)
-    {limit, all_params} = QueryBuilder.limit(query, sources, all_params)
+    {limit, _all_params} = QueryBuilder.limit(query, sources, all_params)
 
     res = [select, from, where, group_by, having, order_by, limit]
 
@@ -92,5 +89,11 @@ defimpl DBConnection.Query, for: Pillar.Ecto.Query do
 
   def decode(_query, result, _opts) do
     result
+  end
+end
+
+defimpl String.Chars, for: Pillar.Ecto.Query do
+  def to_string(%Pillar.Ecto.Query{statement: statement}) do
+    IO.iodata_to_binary(statement)
   end
 end

@@ -166,7 +166,8 @@ defmodule Pillar.Ecto.QueryBuilder do
   def limit(%Query{offset: nil, limit: nil}, _sources, all_params), do: {[], all_params}
 
   def limit(%Query{offset: nil, limit: %QueryExpr{expr: expr}} = query, sources, all_params) do
-    {[" LIMIT ", expr(expr, sources, query, all_params)], all_params}
+    {exp, all_params} = expr(expr, sources, query, all_params)
+    {[" LIMIT ", exp], all_params}
   end
 
   def limit(
@@ -413,16 +414,16 @@ defmodule Pillar.Ecto.QueryBuilder do
     expr(other, sources, query, all_params)
   end
 
-  def expr(nil, _sources, _query, all_params), do: "NULL"
-  def expr(true, _sources, _query, all_params), do: "1"
-  def expr(false, _sources, _query, all_params), do: "0"
+  def expr(nil, _sources, _query, all_params), do: {"NULL", all_params}
+  def expr(true, _sources, _query, all_params), do: {"1", all_params}
+  def expr(false, _sources, _query, all_params), do: {"0", all_params}
 
   def expr(s, _s, _q, all_params) when is_binary(s) do
-    [?\', String.replace(s, "'", "''"), ?\']
+    {[?\', String.replace(s, "'", "''"), ?\'], all_params}
   end
 
-  def expr(i, _s, _q, all_params) when is_integer(i), do: Integer.to_string(i)
-  def expr(f, _s, _q, all_params) when is_float(f), do: Float.to_string(f)
+  def expr(i, _s, _q, all_params) when is_integer(i), do: {Integer.to_string(i), all_params}
+  def expr(f, _s, _q, all_params) when is_float(f), do: {Float.to_string(f), all_params}
 
   def interval(count, _interval, sources, query, all_params) do
     [expr(count, sources, query, all_params)]
