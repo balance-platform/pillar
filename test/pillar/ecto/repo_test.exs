@@ -18,10 +18,10 @@ defmodule Repo do
 end
 
 defmodule Pillar.Ecto.RepoTest do
-  alias Pillar.Connection
   use ExUnit.Case
 
   import Ecto.Query
+  import Pillar.Ecto.Query
 
   setup do
     defmodule PillarWorker do
@@ -91,7 +91,6 @@ defmodule Pillar.Ecto.RepoTest do
         group_by: st.ticker
       )
       |> Repo.all()
-      |> IO.inspect()
 
     [
       %{max_size: 10, min_size: 4, ticker: "SPY", total: 4},
@@ -130,5 +129,33 @@ defmodule Pillar.Ecto.RepoTest do
       |> Enum.uniq()
 
     assert res == ["SPY"]
+  end
+
+  test "fragment - sumIf" do
+    res =
+      from(st in StockTrade,
+        select: %{
+          res: fragment("sumIf(?, ? = 'JPM')", st.size, st.ticker)
+        }
+      )
+      |> Repo.all()
+
+    assert res == [%{res: 56}]
+  end
+
+  test "any" do
+    res =
+      from(st in StockTrade,
+        select: %{
+          any_ch: any_ch(st.size),
+          anyHeavy: anyHeavy(st.size),
+          anyLast: anyLast(st.size),
+          ticker: st.ticker
+        },
+        group_by: st.ticker
+      )
+      |> Repo.all()
+
+    assert length(res) == 3
   end
 end

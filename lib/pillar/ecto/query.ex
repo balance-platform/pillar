@@ -65,6 +65,18 @@ defmodule Pillar.Ecto.Query do
     end
   end
 
+  defmacro anyLast(field) do
+    quote do
+      fragment("anyLast(?)", unquote(field))
+    end
+  end
+
+  defmacro anyHeavy(field) do
+    quote do
+      fragment("anyHeavy(?)", unquote(field))
+    end
+  end
+
   defmacro uniq(field) do
     quote do
       fragment("uniq(?)", unquote(field))
@@ -74,6 +86,18 @@ defmodule Pillar.Ecto.Query do
   defmacro stddevPop(field) do
     quote do
       fragment("stddevPop(?)", unquote(field))
+    end
+  end
+
+  defmacro argMin(arg, val) do
+    quote do
+      fragment("argMin(?, ?)", unquote(arg), unquote(val))
+    end
+  end
+
+  defmacro argMax(arg, val) do
+    quote do
+      fragment("argMax(?, ?)", unquote(arg), unquote(val))
     end
   end
 end
