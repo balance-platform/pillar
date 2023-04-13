@@ -34,7 +34,7 @@ defmodule Pillar.Ecto.Query do
 
     {select_distinct, order_by_distinct} = QueryBuilder.distinct(query.distinct, sources, query)
 
-    from = QueryBuilder.from(query, sources)
+    {from, all_params} = QueryBuilder.from(query, sources, all_params)
     {select, all_params} = QueryBuilder.select(query, select_distinct, sources, all_params)
     # join = QueryBuilder.join(query, sources)
     {where, all_params} = QueryBuilder.where(query, sources, all_params)

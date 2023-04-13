@@ -1,7 +1,14 @@
 defmodule Pillar.Ecto.Helpers do
-  def get_source(query, sources, ix, source) do
+  def get_source(query, sources, ix, source, all_params) do
     {expr, name, _schema} = elem(sources, ix)
-    {expr || Pillar.Ecto.QueryBuilder.paren_expr(source, sources, query), name}
+
+    {expr, all_params} =
+      case expr do
+        nil -> Pillar.Ecto.QueryBuilder.paren_expr(source, sources, query, all_params)
+        _ -> {expr, all_params}
+      end
+
+    {{expr, name}, all_params}
   end
 
   def quote_qualified_name(name, sources, ix) do

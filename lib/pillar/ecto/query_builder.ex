@@ -70,24 +70,27 @@ defmodule Pillar.Ecto.QueryBuilder do
     )
   end
 
-  def from(%{from: %{source: source}} = query, sources) do
-    {from, name} = Helpers.get_source(query, sources, 0, source)
-    [" FROM ", from, " AS " | name]
+  def from(%{from: %{source: source}} = query, sources, all_params) do
+    {{from, name}, all_params} = Helpers.get_source(query, sources, 0, source, all_params)
+    {[" FROM ", from, " AS " | name], all_params}
   end
 
   def update_fields(query, _sources) do
     Helpers.error!(query, "UPDATE is not supported")
   end
 
-  def join(%Query{joins: []}, _sources), do: []
+  def join(%Query{joins: []}, _sources, all_params), do: {[], all_params}
 
-  def join(%Query{joins: joins} = query, sources) do
+  def join(%Query{joins: joins} = query, sources, all_params) do
     [
       ?\s
-      | Helpers.intersperse_map(joins, ?\s, fn
-          %JoinExpr{qual: qual, ix: ix, source: source, on: %QueryExpr{expr: on_expr}} ->
-            {join, _name} = Helpers.get_source(query, sources, ix, source)
-            ["ANY", join_qual(qual), join, " USING ", on_join_expr(on_expr)]
+      | Helpers.intersperse_reduce(joins, ?\s, all_params, fn
+          %JoinExpr{qual: qual, ix: ix, source: source, on: %QueryExpr{expr: on_expr}},
+          all_params ->
+            {{join, _name}, all_params} =
+              Helpers.get_source(query, sources, ix, source, all_params)
+
+            {["ANY", join_qual(qual), join, " USING ", on_join_expr(on_expr)], all_params}
         end)
     ]
   end
@@ -196,12 +199,6 @@ defmodule Pillar.Ecto.QueryBuilder do
         query,
         all_params
       ) do
-    IO.inspect(["name", name, "op", op])
-    # IO.inspect(where_paren_expr(expr, sources, query))
-
-    IO.inspect(["BOOLEAN START", all_params])
-    # IO.inspect(["query_exprs", query_exprs])
-
     {exp, all_params} = paren_expr(expr, sources, query, all_params)
 
     acc = {
@@ -214,9 +211,6 @@ defmodule Pillar.Ecto.QueryBuilder do
         %BooleanExpr{expr: expr, op: op}, {{op, acc}, all_params} ->
           {exp, all_params} = paren_expr(expr, sources, query, all_params)
 
-          IO.inspect(["NEW EXPR", exp])
-          IO.inspect(["ALL PARAMS", all_params])
-
           acc = {op, [acc, operator_to_boolean(op), exp]}
 
           {acc, all_params}
@@ -224,15 +218,10 @@ defmodule Pillar.Ecto.QueryBuilder do
         %BooleanExpr{expr: expr, op: op}, {{_, acc}, all_params} ->
           {exp, all_params} = paren_expr(expr, sources, query, all_params)
 
-          IO.inspect(["NEW EXPR", exp])
-
           acc = {op, [?(, acc, ?), operator_to_boolean(op), exp]}
 
           {acc, all_params}
       end)
-
-    IO.inspect(["BOOLEAN END"])
-    IO.inspect(["where filters", where_filters])
 
     {[name | where_filters], all_params}
   end
@@ -253,12 +242,7 @@ defmodule Pillar.Ecto.QueryBuilder do
   end
 
   def expr({:^, [], [_ix]}, _sources, _query, all_params) do
-    IO.inspect(["HEEERE"])
-
     [param | rest] = all_params
-
-    IO.inspect(["GETTING PARAM NAME", to_string(param), inspect(rest)])
-
     {to_string(param), rest}
   end
 
@@ -285,16 +269,19 @@ defmodule Pillar.Ecto.QueryBuilder do
   end
 
   def expr({:in, _, [_left, []]}, _sources, _query, all_params) do
-    "0"
+    {"0", all_params}
   end
 
   def expr({:in, _, [left, right]}, sources, query, all_params) when is_list(right) do
-    args = Helpers.intersperse_map(right, ?,, &expr(&1, sources, query, all_params))
-    [expr(left, sources, query, all_params), " IN (", args, ?)]
+    {args, all_params} =
+      Helpers.intersperse_reduce(right, ?,, all_params, &expr(&1, sources, query, all_params))
+
+    {exp, all_params} = expr(left, sources, query, all_params)
+    {[exp, " IN (", args, ?)], all_params}
   end
 
   def expr({:in, _, [_, {:^, _, [_, 0]}]}, _sources, _query, all_params) do
-    "0"
+    {"0", all_params}
   end
 
   def expr({:in, _, [left, {:^, _, [_, length]}]}, sources, query, all_params) do
@@ -304,16 +291,21 @@ defmodule Pillar.Ecto.QueryBuilder do
   end
 
   def expr({:in, _, [left, right]}, sources, query, all_params) do
-    [
-      expr(left, sources, query, all_params),
-      " = ANY(",
-      expr(right, sources, query, all_params),
-      ?)
-    ]
+    {left, all_params} = expr(left, sources, query, all_params)
+    {right, all_params} = expr(right, sources, query, all_params)
+
+    # TODO: Any is not being supported
+    {[
+       left,
+       " = ANY(",
+       right,
+       ?)
+     ], all_params}
   end
 
   def expr({:is_nil, _, [arg]}, sources, query, all_params) do
-    [expr(arg, sources, query, all_params) | " IS NULL"]
+    {exp, all_params} = expr(arg, sources, query, all_params)
+    {[exp | " IS NULL"], all_params}
   end
 
   def expr({:not, _, [expr]}, sources, query, all_params) do
@@ -332,7 +324,7 @@ defmodule Pillar.Ecto.QueryBuilder do
     {Pillar.Ecto.Query.all(query), all_params}
   end
 
-  def expr({:fragment, _, [kw]}, _sources, query, all_params)
+  def expr({:fragment, _, [kw]}, _sources, query, _all_params)
       when is_list(kw) or tuple_size(kw) == 3 do
     Helpers.error!(query, "ClickHouse adapter does not support keyword or interpolated fragments")
   end
@@ -354,13 +346,9 @@ defmodule Pillar.Ecto.QueryBuilder do
     case handle_call(fun, length(args)) do
       {:binary_op, op} ->
         [left, right] = args
-        IO.inspect(["here bin op fun "])
 
         {left, all_params} = op_to_binary(left, sources, query, all_params)
         {right, all_params} = op_to_binary(right, sources, query, all_params)
-
-        IO.inspect(["left", left])
-        IO.inspect(["right", right])
 
         xs = [
           left,
@@ -370,8 +358,6 @@ defmodule Pillar.Ecto.QueryBuilder do
         {xs, all_params}
 
       {:fun, fun} ->
-        IO.inspect(["FUN", fun])
-
         {exp, all_params} =
           Helpers.intersperse_reduce(args, ", ", all_params, &expr(&1, sources, query, &2))
 
@@ -385,19 +371,22 @@ defmodule Pillar.Ecto.QueryBuilder do
     end
   end
 
-  def expr({:count, _, []}, _sources, _query, all_params), do: "count(*)"
+  def expr({:count, _, []}, _sources, _query, all_params), do: {"count(*)", all_params}
 
   def expr(list, sources, query, all_params) when is_list(list) do
-    ["ARRAY[", Helpers.intersperse_map(list, ?,, &expr(&1, sources, query, all_params)), ?]]
+    {exp, all_params} =
+      Helpers.intersperse_reduce(list, ?,, all_params, &expr(&1, sources, query, &2))
+
+    {["ARRAY[", exp, ?]], all_params}
   end
 
   def expr(%Decimal{} = decimal, _sources, _query, all_params) do
-    Decimal.to_string(decimal, :normal)
+    {Decimal.to_string(decimal, :normal), all_params}
   end
 
   def expr(%Ecto.Query.Tagged{value: binary, type: :binary}, _sources, _query, all_params)
       when is_binary(binary) do
-    ["0x", Base.encode16(binary, case: :lower)]
+    {["0x", Base.encode16(binary, case: :lower)], all_params}
   end
 
   # def expr(%Ecto.Query.Tagged{value: other, type: {_, field}}, sources, query) do

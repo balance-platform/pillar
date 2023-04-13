@@ -72,27 +72,20 @@ defmodule Pillar.Ecto.ConnMod do
         {:error, reason, state}
 
       {:ok, body} ->
-        IO.inspect(["body", body])
-
         [types | rows] =
           body
           |> String.split("\n", trim: true)
           |> Enum.map(&Jason.decode!(&1))
           |> Enum.drop(1)
 
-        IO.inspect(["types", types])
-        IO.inspect(["result", rows])
-
         rows =
           rows
           |> Enum.map(fn row ->
             Enum.zip(row, types)
             |> Enum.map(fn {data, type} ->
-              IO.inspect([type, data])
               Helpers.parse_type(type, data)
             end)
           end)
-          |> IO.inspect()
 
         {
           :ok,

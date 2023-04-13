@@ -23,8 +23,6 @@ defmodule Pillar.Ecto.Connection do
   end
 
   def execute(conn, query, params, options) do
-    IO.inspect(["execute(conn, query, params, options)"])
-
     case DBConnection.prepare_execute(conn, query, params, options) do
       {:ok, _query, result} ->
         {:ok, result}
@@ -40,7 +38,6 @@ defmodule Pillar.Ecto.Connection do
 
   ## Queries
   def all(query) do
-    IO.inspect(["#{__MODULE__} - all", query])
     Query.all(query)
   end
 
@@ -48,7 +45,7 @@ defmodule Pillar.Ecto.Connection do
 
   def delete_all(query), do: Query.delete_all(query)
 
-  def insert(prefix, table, header, rows, on_conflict, returning),
+  def insert(prefix, table, header, rows, on_conflict, returning, _),
     do: Query.insert(prefix, table, header, rows, on_conflict, returning)
 
   def update(prefix, table, fields, filters, returning),
