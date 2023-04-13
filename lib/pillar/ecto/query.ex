@@ -22,19 +22,26 @@ defmodule Pillar.Ecto.Query do
 
   @spec all(query :: Ecto.Query.t()) :: String.t()
   def all(query) do
+    all_params = MapSet.new()
+
+    IO.inspect(["query - all", query, query.sources, query.wheres])
+
     sources = QueryBuilder.create_names(query)
+    IO.inspect(["sources", sources])
     {select_distinct, order_by_distinct} = QueryBuilder.distinct(query.distinct, sources, query)
 
     from = QueryBuilder.from(query, sources)
     select = QueryBuilder.select(query, select_distinct, sources)
-    join = QueryBuilder.join(query, sources)
-    where = QueryBuilder.where(query, sources)
-    group_by = QueryBuilder.group_by(query, sources)
-    having = QueryBuilder.having(query, sources)
-    order_by = QueryBuilder.order_by(query, order_by_distinct, sources)
-    limit = QueryBuilder.limit(query, sources)
+    # join = QueryBuilder.join(query, sources)
+    {where, all_params} = QueryBuilder.where(query, sources, all_params)
+    {group_by, all_params} = QueryBuilder.group_by(query, sources, all_params)
+    {having, all_params} = QueryBuilder.having(query, sources, all_params)
+    {order_by, all_params} = QueryBuilder.order_by(query, order_by_distinct, sources, all_params)
+    {limit, all_params} = QueryBuilder.limit(query, sources, all_params)
 
-    res = [select, from, join, where, group_by, having, order_by, limit]
+    res = [select, from, where, group_by, having, order_by, limit]
+
+    IO.inspect(["END"])
 
     IO.iodata_to_binary(res)
   end
@@ -65,10 +72,11 @@ defimpl DBConnection.Query, for: Pillar.Ecto.Query do
     query
   end
 
-  def encode(%{type: :insert} = query, params, _opts), do: raise("Not supported")
+  def encode(%{type: :insert} = query, _params, _opts), do: raise("Not supported")
 
   def encode(%{statement: query_part}, params, _opts) do
     # TODO: ENCODE PARAMS?
+    IO.inspect(["ENCODE QUERY", params])
     query_part
   end
 

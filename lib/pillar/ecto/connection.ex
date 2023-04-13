@@ -5,13 +5,16 @@ defmodule Pillar.Ecto.Connection do
     DBConnection.child_spec(Pillar.Ecto.ConnMod, opts)
   end
 
+  def query(conn, query, _, _) when is_binary(query) do
+    query = %Query{name: "", statement: query}
+    execute(conn, query, [], [])
+  end
+
   def prepare_execute(conn, name, prepared_query, params, options) do
     query = %Query{name: name, statement: prepared_query}
-    IO.inspect(["here", query])
 
     case DBConnection.prepare_execute(conn, query, params, options) do
       {:ok, query, result} ->
-        IO.inspect("result")
         {:ok, %{query | statement: prepared_query}, result}
 
       {:error, error} ->
@@ -20,7 +23,7 @@ defmodule Pillar.Ecto.Connection do
   end
 
   def execute(conn, query, params, options) do
-    IO.inspect(["here", query])
+    IO.inspect(["execute(conn, query, params, options)"])
 
     case DBConnection.prepare_execute(conn, query, params, options) do
       {:ok, _query, result} ->
@@ -37,6 +40,7 @@ defmodule Pillar.Ecto.Connection do
 
   ## Queries
   def all(query) do
+    IO.inspect(["#{__MODULE__} - all", query])
     Query.all(query)
   end
 

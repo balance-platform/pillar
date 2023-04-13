@@ -85,6 +85,8 @@ defmodule Pillar.Ecto.Helpers do
     :binary.replace(value, "'", "''", [:global])
   end
 
+  def type_from_value(v) when is_integer(v), do: :integer
+
   def ecto_to_db({:array, t}), do: "Array(#{ecto_to_db(t)})"
   def ecto_to_db(:id), do: "UInt32"
   def ecto_to_db(:binary_id), do: "FixedString(36)"

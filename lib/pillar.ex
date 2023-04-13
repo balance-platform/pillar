@@ -20,10 +20,7 @@ defmodule Pillar do
   end
 
   def query(%Connection{} = connection, query, params \\ %{}, options \\ %{}) do
-    final_sql =
-      QueryBuilder.query(query, params)
-      |> IO.inspect()
-
+    final_sql = QueryBuilder.query(query, params)
     execute_sql(connection, final_sql, options)
   end
 

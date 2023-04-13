@@ -3,8 +3,14 @@ defmodule Pillar.Ecto.ConnMod do
 
   use DBConnection
 
-  def connect(_) do
-    conn = Pillar.Connection.new("http://localhost:8123")
+  alias Pillar.Connection
+  alias Pillar.HttpClient
+  alias Pillar.HttpClient.Response
+  alias Pillar.HttpClient.TransportError
+
+  def connect(opts) do
+    url = Keyword.get(opts, :url, "http://localhost:8123")
+    conn = Pillar.Connection.new(url)
     {:ok, %{conn: conn}}
   end
 
@@ -45,22 +51,48 @@ defmodule Pillar.Ecto.ConnMod do
 
   @doc false
   def handle_execute(query, _params, _opts, state) do
-    IO.inspect(["here--------------", query])
-
-    case Pillar.query(state.conn, query.statement <> " FORMAT JSON") |> IO.inspect() do
+    state.conn
+    |> Connection.url_from_connection()
+    |> HttpClient.post(
+      query.statement <>
+        " FORMAT JSONCompactEachRow SETTINGS date_time_output_format='iso', output_format_json_quote_64bit_integers=0",
+      timeout: 60_000
+    )
+    |> parse()
+    |> case do
       {:error, reason} ->
         {:error, reason, state}
 
-      {:ok, result} ->
-        IO.inspect(["RETURN CLICKHOUSE", result])
+      {:ok, body} ->
+        IO.inspect(["body", body])
+        rows = body |> String.split("\n", trim: true) |> Enum.map(&Jason.decode!(&1))
+
+        IO.inspect(["query", query])
+        IO.inspect(["result", rows])
 
         {
           :ok,
           query,
-          to_result(result),
+          to_result(rows),
           state
         }
     end
+  end
+
+  defp parse(%Response{status_code: 200, body: body}) do
+    {:ok, body}
+  end
+
+  defp parse(%Response{status_code: _any, body: _body} = resp) do
+    {:error, resp}
+  end
+
+  defp parse(%TransportError{} = error) do
+    {:error, error}
+  end
+
+  defp parse(%RuntimeError{} = error) do
+    {:error, error}
   end
 
   defp to_result(res) do
@@ -69,7 +101,6 @@ defmodule Pillar.Ecto.ConnMod do
       nil -> %{num_rows: 0, rows: [nil]}
       _ -> %{num_rows: 1, rows: [res]}
     end
-    |> IO.inspect()
   end
 
   defp to_row(xs) when is_list(xs), do: xs

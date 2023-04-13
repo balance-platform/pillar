@@ -3,9 +3,19 @@ defmodule Pillar.Ecto.QueryBuilder do
   alias Ecto.Query.BooleanExpr
   alias Ecto.Query.JoinExpr
   alias Ecto.Query.QueryExpr
+  alias Pillar.Ecto.QueryParam
 
   # alias ClickhouseEcto.Connection
   alias Pillar.Ecto.Helpers
+
+  # TODO: We need to convert our values
+  # to the a parameterized query.
+  #
+  #
+  # {id:UInt8} and string_column = {phrase:String}"
+  #
+  # Probably add info to the columns in ecto
+  # or give good defaults
 
   binary_ops = [
     ==: " = ",
@@ -59,7 +69,6 @@ defmodule Pillar.Ecto.QueryBuilder do
   end
 
   def from(%{from: %{source: source}} = query, sources) do
-    IO.inspect([sources, source])
     {from, name} = Helpers.get_source(query, sources, 0, source)
     [" FROM ", from, " AS " | name]
   end
@@ -101,35 +110,39 @@ defmodule Pillar.Ecto.QueryBuilder do
   def join_qual(:inner), do: " INNER JOIN "
   def join_qual(:left), do: " LEFT OUTER JOIN "
 
-  def where(%Query{wheres: wheres} = query, sources) do
-    boolean(" WHERE ", wheres, sources, query)
+  def where(%Query{wheres: wheres} = query, sources, all_params) do
+    boolean(" WHERE ", wheres, sources, query, all_params)
   end
 
-  def having(%Query{havings: havings} = query, sources) do
-    boolean(" HAVING ", havings, sources, query)
+  def having(%Query{havings: havings} = query, sources, all_params) do
+    boolean(" HAVING ", havings, sources, query, all_params)
   end
 
-  def group_by(%Query{group_bys: []}, _sources), do: []
+  def group_by(%Query{group_bys: []}, _sources, all_params), do: {[], all_params}
 
-  def group_by(%Query{group_bys: group_bys} = query, sources) do
-    [
+  def group_by(%Query{group_bys: group_bys} = query, sources, all_params) do
+    xs = [
       " GROUP BY "
       | Helpers.intersperse_map(group_bys, ", ", fn
           %QueryExpr{expr: expr} ->
             Helpers.intersperse_map(expr, ", ", &expr(&1, sources, query))
         end)
     ]
+
+    {xs, all_params}
   end
 
-  def order_by(%Query{order_bys: []}, _distinct, _sources), do: []
+  def order_by(%Query{order_bys: []}, _distinct, _sources, all_params), do: {[], all_params}
 
-  def order_by(%Query{order_bys: order_bys} = query, distinct, sources) do
+  def order_by(%Query{order_bys: order_bys} = query, distinct, sources, all_params) do
     order_bys = Enum.flat_map(order_bys, & &1.expr)
 
-    [
+    xs = [
       " ORDER BY "
       | Helpers.intersperse_map(distinct ++ order_bys, ", ", &order_by_expr(&1, sources, query))
     ]
+
+    {xs, all_params}
   end
 
   def order_by_expr({dir, expr}, sources, query) do
@@ -141,10 +154,10 @@ defmodule Pillar.Ecto.QueryBuilder do
     end
   end
 
-  def limit(%Query{offset: nil, limit: nil}, _sources), do: []
+  def limit(%Query{offset: nil, limit: nil}, _sources, all_params), do: {[], all_params}
 
-  def limit(%Query{offset: nil, limit: %QueryExpr{expr: expr}} = query, sources) do
-    [" LIMIT ", expr(expr, sources, query)]
+  def limit(%Query{offset: nil, limit: %QueryExpr{expr: expr}} = query, sources, all_params) do
+    {[" LIMIT ", expr(expr, sources, query)], all_params}
   end
 
   def limit(
@@ -155,29 +168,61 @@ defmodule Pillar.Ecto.QueryBuilder do
     [" LIMIT ", expr(expr_offset, sources, query), ", ", expr(expr_limit, sources, query)]
   end
 
-  def boolean(_name, [], _sources, _query), do: []
+  def boolean(_name, [], _sources, _query, all_params), do: {[], all_params}
 
-  def boolean(name, [%{expr: expr, op: op} | query_exprs], sources, query) do
-    [
-      name
-      | Enum.reduce(query_exprs, {op, paren_expr(expr, sources, query)}, fn
-          %BooleanExpr{expr: expr, op: op}, {op, acc} ->
-            {op, [acc, operator_to_boolean(op), paren_expr(expr, sources, query)]}
+  def boolean(
+        name,
+        [%{expr: expr, op: op, params: params} | query_exprs] = exprs,
+        sources,
+        query,
+        all_params
+      ) do
+    IO.inspect(["name", name, "op", op])
+    # IO.inspect(where_paren_expr(expr, sources, query))
 
-          %BooleanExpr{expr: expr, op: op}, {_, acc} ->
-            {op, [?(, acc, ?), operator_to_boolean(op), paren_expr(expr, sources, query)]}
-        end)
-        |> elem(1)
-    ]
+    IO.inspect(["BOOLEAN START", expr, params])
+    # IO.inspect(["query_exprs", query_exprs])
+
+    where_filters =
+      Enum.reduce(query_exprs, {op, paren_expr(expr, sources, query, params)}, fn
+        %BooleanExpr{expr: expr, op: op, params: params}, {op, acc} ->
+          {op, [acc, operator_to_boolean(op), paren_expr(expr, sources, query, params)]}
+
+        %BooleanExpr{expr: expr, op: op, params: params}, {_, acc} ->
+          {op, [?(, acc, ?), operator_to_boolean(op), paren_expr(expr, sources, query, params)]}
+      end)
+      |> elem(1)
+      |> IO.inspect()
+
+    IO.inspect(["BOOLEAN END"])
+
+    {[name | where_filters], all_params}
   end
 
   def operator_to_boolean(:and), do: " AND "
   def operator_to_boolean(:or), do: " OR "
 
-  def paren_expr(false, _sources, _query), do: "(0=1)"
-  def paren_expr(true, _sources, _query), do: "(1=1)"
+  def maybe_to_param_name({{:., _, [{:&, _, [idx]}, field]}, _, []}, sources, _query)
+      when is_atom(field) do
+    {_, _name, schema} = elem(sources, idx)
 
-  def paren_expr(expr, sources, query) do
+    type = schema.__schema__(:type, field)
+
+    %QueryParam{
+      type: type,
+      field: field,
+      name: "#{Atom.to_string(field)}_#{idx}",
+      value: nil
+    }
+  end
+
+  def maybe_to_param_name(_, _, _), do: nil
+
+  def paren_expr(false, _sources, _query, _params), do: "false"
+  def paren_expr(true, _sources, _query, _params), do: "true"
+
+  def paren_expr(expr, sources, query, params \\ nil) do
+    IO.inspect(["paren_expe", expr, params])
     [?(, expr(expr, sources, query), ?)]
   end
 
@@ -190,7 +235,10 @@ defmodule Pillar.Ecto.QueryBuilder do
   end
 
   def expr({{:., _, [{:&, _, [idx]}, field]}, _, []}, sources, _query) when is_atom(field) do
-    Helpers.quote_qualified_name(field, sources, idx)
+    IO.inspect(["."])
+    res = Helpers.quote_qualified_name(field, sources, idx)
+    IO.inspect(["res", res])
+    res
   end
 
   def expr({:&, _, [idx, fields, _counter]}, sources, query) do
@@ -270,9 +318,16 @@ defmodule Pillar.Ecto.QueryBuilder do
     case handle_call(fun, length(args)) do
       {:binary_op, op} ->
         [left, right] = args
+        IO.inspect(["here bin op fun "])
+        IO.inspect(["LEFT", left])
+        param_name = maybe_to_param_name(left, sources, query)
+        IO.inspect(["param_name", param_name])
+        IO.inspect(["left", left])
+        IO.inspect(["right", right])
         [op_to_binary(left, sources, query), op | op_to_binary(right, sources, query)]
 
       {:fun, fun} ->
+        IO.inspect(["here fun fun "])
         [fun, ?(, modifier, Helpers.intersperse_map(args, ", ", &expr(&1, sources, query)), ?)]
     end
   end
@@ -292,8 +347,18 @@ defmodule Pillar.Ecto.QueryBuilder do
     ["0x", Base.encode16(binary, case: :lower)]
   end
 
-  def expr(%Ecto.Query.Tagged{value: other, type: type}, sources, query) do
-    ["CAST(", expr(other, sources, query), " AS ", Helpers.ecto_to_db(type), ")"]
+  # def expr(%Ecto.Query.Tagged{value: other, type: {_, field}}, sources, query) do
+  #   # We don't support joins for now.
+  #   {_, name, schema} = elem(sources, 0)
+  #   IO.inspect(["elem(sources, 0)", elem(sources, 0)])
+  #   IO.inspect(["other", other])
+  #   type = schema.__schema__(:type, field)
+  #   [?", expr(other, sources, query), " AS ", Helpers.ecto_to_db(type), ")"]
+  # end
+
+  def expr(%Ecto.Query.Tagged{value: other}, sources, query) do
+    # ["CAST(", expr(other, sources, query), " AS ", Helpers.ecto_to_db(type), ")"]
+    expr(other, sources, query)
   end
 
   def expr(nil, _sources, _query), do: "NULL"
