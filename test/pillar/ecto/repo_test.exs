@@ -69,7 +69,7 @@ defmodule Pillar.Ecto.RepoTest do
   test "can select all rows" do
     trades = Repo.all(StockTrade)
 
-    assert length(trades) == 7
+    assert length(trades) == 8
   end
 
   test "can select a single row" do
@@ -100,16 +100,24 @@ defmodule Pillar.Ecto.RepoTest do
     ] = data
   end
 
-  test "can filter" do
+  test "can filter with dynamic data" do
     dynamic_ticker = "AAPL"
     dynamic_size = 10
+
+    res =
+      from(st in StockTrade, where: st.ticker == ^dynamic_ticker, where: st.size >= ^dynamic_size)
+      |> Repo.all()
+
+    assert Enum.empty?(res)
 
     res =
       from(st in StockTrade, where: st.ticker == ^dynamic_ticker and st.size >= ^dynamic_size)
       |> Repo.all()
 
     assert Enum.empty?(res)
+  end
 
+  test "can filter with fixed values" do
     res = from(st in StockTrade, where: st.ticker == "INTC") |> Repo.all()
     refute Enum.empty?(res)
 
@@ -117,7 +125,7 @@ defmodule Pillar.Ecto.RepoTest do
     refute Enum.empty?(res)
 
     res =
-      from(st in StockTrade, where: st.price >= 400, select: st.ticker)
+      from(st in StockTrade, where: st.price >= 400.0, select: st.ticker)
       |> Repo.all()
       |> Enum.uniq()
 
