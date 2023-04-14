@@ -1,7 +1,6 @@
 defmodule Pillar.Ecto do
   use Ecto.Adapters.SQL,
-    driver: Pillar.Ecto.Driver,
-    migration_lock: "FOR UPDATE"
+    driver: Pillar.Ecto.Driver
 
   def supports_ddl_transaction?(), do: false
 
