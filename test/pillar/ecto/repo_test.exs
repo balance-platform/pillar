@@ -131,6 +131,30 @@ defmodule Pillar.Ecto.RepoTest do
     assert res == ["SPY"]
   end
 
+  test "order by" do
+    res =
+      from(
+        st in StockTrade,
+        select: st.ticker,
+        order_by: [desc: st.price],
+        limit: 1
+      )
+      |> Repo.one()
+
+    assert res == "SPY"
+
+    res =
+      from(
+        st in StockTrade,
+        select: st.ticker,
+        order_by: [asc: st.price],
+        limit: 1
+      )
+      |> Repo.one()
+
+    assert res == "INTC"
+  end
+
   test "fragment - sumIf" do
     res =
       from(st in StockTrade,

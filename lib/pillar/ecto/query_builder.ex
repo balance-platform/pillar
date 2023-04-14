@@ -5,17 +5,7 @@ defmodule Pillar.Ecto.QueryBuilder do
   alias Ecto.Query.QueryExpr
   alias Pillar.Ecto.QueryParam
 
-  # alias ClickhouseEcto.Connection
   alias Pillar.Ecto.Helpers
-
-  # TODO: We need to convert our values
-  # to the a parameterized query.
-  #
-  #
-  # {id:UInt8} and string_column = {phrase:String}"
-  #
-  # Probably add info to the columns in ecto
-  # or give good defaults
 
   binary_ops = [
     ==: " = ",
@@ -145,24 +135,28 @@ defmodule Pillar.Ecto.QueryBuilder do
   def order_by(%Query{order_bys: order_bys} = query, distinct, sources, all_params) do
     order_bys = Enum.flat_map(order_bys, & &1.expr)
 
+    {expr, all_params} =
+      Helpers.intersperse_reduce(
+        distinct ++ order_bys,
+        ", ",
+        all_params,
+        &order_by_expr(&1, sources, query, &2)
+      )
+
     xs = [
       " ORDER BY "
-      | Helpers.intersperse_map(
-          distinct ++ order_bys,
-          ", ",
-          &order_by_expr(&1, sources, query, all_params)
-        )
+      | expr
     ]
 
     {xs, all_params}
   end
 
   def order_by_expr({dir, expr}, sources, query, all_params) do
-    str = expr(expr, sources, query, all_params)
+    {str, all_params} = expr(expr, sources, query, all_params)
 
     case dir do
-      :asc -> str
-      :desc -> [str | " DESC"]
+      :asc -> {str, all_params}
+      :desc -> {[str | " DESC"], all_params}
     end
   end
 
@@ -252,7 +246,7 @@ defmodule Pillar.Ecto.QueryBuilder do
     {res, all_params}
   end
 
-  def expr({:&, _, [idx, fields, _counter]}, sources, query, _all_params) do
+  def expr({:&, _, [idx, fields, _counter]}, sources, query, all_params) do
     {_, name, schema} = elem(sources, idx)
 
     if is_nil(schema) and is_nil(fields) do
@@ -265,7 +259,7 @@ defmodule Pillar.Ecto.QueryBuilder do
       )
     end
 
-    Helpers.intersperse_map(fields, ", ", &[name, ?. | Helpers.quote_name(&1)])
+    {Helpers.intersperse_map(fields, ", ", &[name, ?. | Helpers.quote_name(&1)]), all_params}
   end
 
   def expr({:in, _, [_left, []]}, _sources, _query, all_params) do

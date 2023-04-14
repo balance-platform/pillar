@@ -48,12 +48,6 @@ defmodule Pillar.Ecto.Helpers do
     [wrapper, value, wrapper]
   end
 
-  def quote_table(prefix, name)
-  def quote_table(nil, name), do: quote_name(name)
-  def quote_table(prefix, name), do: intersperse_map([prefix, name], ?., &quote_name/1)
-
-  def single_quote(value), do: value |> escape_string |> wrap_in(?')
-
   def intersperse_map(list, separator, mapper, acc \\ [])
 
   def intersperse_map([], _separator, _mapper, acc),
@@ -80,27 +74,62 @@ defmodule Pillar.Ecto.Helpers do
     intersperse_reduce(rest, separator, user_acc, reducer, [acc, elem, separator])
   end
 
-  def if_do(condition, value) do
-    if condition, do: value, else: []
-  end
-
-  def if_do(condition, value, else_value) do
-    if condition, do: value, else: else_value
-  end
-
-  def escape_string(value) when is_binary(value) do
-    :binary.replace(value, "'", "''", [:global])
-  end
-
   def parse_type(_, nil), do: nil
   def parse_type("String", s), do: s
   def parse_type("LowCardinality(String)", s), do: s
-  def parse_type("UInt32", i), do: i
-  def parse_type("Int32", i), do: i
-  def parse_type("Float32", i), do: i
-  def parse_type("Float64", i), do: i
-  def parse_type("DateTime", s), do: NaiveDateTime.from_iso8601!(s)
+  def parse_type("UInt8", i), do: parse_integer(i)
+  def parse_type("UInt16", i), do: parse_integer(i)
+  def parse_type("UInt32", i), do: parse_integer(i)
+  def parse_type("UInt64", i), do: parse_integer(i)
+  def parse_type("UInt128", i), do: parse_integer(i)
+  def parse_type("UInt256", i), do: parse_integer(i)
+  def parse_type("Int8", i), do: parse_integer(i)
+  def parse_type("Int16", i), do: parse_integer(i)
+  def parse_type("Int32", i), do: parse_integer(i)
+  def parse_type("Int64", i), do: parse_integer(i)
+  def parse_type("Int128", i), do: parse_integer(i)
+  def parse_type("Int256", i), do: parse_integer(i)
+  def parse_type("Float32", i), do: parse_float(i)
+  def parse_type("Float64", i), do: parse_float(i)
+
+  def parse_type("DateTime", s) do
+    {:ok, time, _} = DateTime.from_iso8601(s)
+    time
+  end
+
+  @decimal_types 1..76
+                 |> Enum.flat_map(fn i ->
+                   [
+                     "Decimal32(#{i})",
+                     "Decimal64(#{i})",
+                     "Decimal128(#{i})",
+                     "Decimal256(#{i})"
+                   ]
+                 end)
+
+  for type <- @decimal_types do
+    def parse_type(unquote(type), i), do: parse_dec(i)
+  end
+
   def parse_type(_, i), do: i
+
+  defp parse_dec(i) when is_integer(i), do: Decimal.new(i)
+  defp parse_dec(i) when is_binary(i), do: Decimal.new(i)
+  defp parse_dec(i) when is_float(i), do: Decimal.from_float(i)
+
+  defp parse_integer(i) when is_integer(i), do: i
+
+  defp parse_integer(s) when is_binary(s) do
+    {i, ""} = Integer.parse(s)
+    i
+  end
+
+  defp parse_float(f) when is_float(f), do: f
+
+  defp parse_float(s) when is_binary(s) do
+    {f, ""} = Float.parse(s)
+    f
+  end
 
   def ecto_to_db({:array, t}), do: "Array(#{ecto_to_db(t)})"
   def ecto_to_db(:id), do: "UInt32"
