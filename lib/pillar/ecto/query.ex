@@ -28,8 +28,17 @@ defmodule Pillar.Ecto.Query do
     # this should be in the same order as we join the query down below together
 
     all_params =
-      query.wheres
-      |> Enum.reduce([], fn elem, acc -> QueryBuilder.param_extractor(elem, sources, acc) end)
+      [
+        {:where, query.wheres},
+        {:limit, query.limit}
+      ]
+      |> Enum.reduce([], fn {for_field, elem}, acc ->
+        List.wrap(elem)
+        |> Enum.reduce(acc, fn expr, acc ->
+          QueryBuilder.param_extractor(for_field, expr, sources, acc)
+        end)
+      end)
+      |> List.flatten()
       |> Enum.reverse()
 
     {select_distinct, order_by_distinct} = QueryBuilder.distinct(query.distinct, sources, query)

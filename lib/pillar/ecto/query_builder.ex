@@ -479,25 +479,48 @@ defmodule Pillar.Ecto.QueryBuilder do
 
   alias Ecto.Query.BooleanExpr
 
-  def param_extractor(%BooleanExpr{expr: expr}, sources, all_params) do
+  def param_extractor(for_field, %BooleanExpr{expr: expr}, sources, all_params) do
     case expr do
       {:and, _, xs} ->
         Enum.reduce(xs, all_params, fn expr, all_params ->
-          param_extractor(expr, sources, all_params)
+          param_extractor(for_field, expr, sources, all_params)
         end)
 
       expr ->
-        param_extractor(expr, sources, all_params)
+        param_extractor(for_field, expr, sources, all_params)
     end
   end
 
-  def param_extractor({op, [], [param, _]}, sources, all_params) when op in @binary_ops do
-    maybe_to_param_name(param, sources, all_params)
+  def param_extractor(for_field, %QueryExpr{expr: expr_limit}, sources, all_params) do
+    maybe_to_param_name(for_field, expr_limit, sources, all_params)
   end
 
-  def param_extractor(_, _, all_params), do: all_params
+  def param_extractor(for_field, {op, [], [param, _]}, sources, all_params)
+      when op in @binary_ops do
+    maybe_to_param_name(for_field, param, sources, all_params)
+  end
 
-  def maybe_to_param_name({{:., _, [{:&, _, [idx]}, field]}, _, []}, sources, all_params)
+  def param_extractor(_, _, _, all_params), do: all_params
+
+  def maybe_to_param_name(limit_offset, {:^, [], [_idx]}, _sources, all_params)
+      when limit_offset in [
+             :limit,
+             :offset
+           ] do
+    type = :integer
+
+    param = %QueryParam{
+      type: type,
+      field: nil,
+      name: "#{Atom.to_string(limit_offset)}_#{length(all_params)}",
+      value: nil,
+      clickhouse_type: Helpers.ecto_to_db(type)
+    }
+
+    [param | all_params]
+  end
+
+  def maybe_to_param_name(:where, {{:., _, [{:&, _, [idx]}, field]}, _, []}, sources, all_params)
       when is_atom(field) do
     {_, _name, schema} = elem(sources, idx)
 
@@ -514,5 +537,5 @@ defmodule Pillar.Ecto.QueryBuilder do
     [param | all_params]
   end
 
-  def maybe_to_param_name(_, _, all_params), do: all_params
+  def maybe_to_param_name(_, _, _, all_params), do: all_params
 end

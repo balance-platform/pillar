@@ -147,7 +147,35 @@ defmodule Pillar.Ecto.RepoTest do
       from(
         st in StockTrade,
         select: st.ticker,
-        order_by: [asc: st.price],
+        order_by: [asc: :price],
+        limit: 1
+      )
+      |> Repo.one()
+
+    assert res == "INTC"
+
+    res =
+      from(
+        st in StockTrade,
+        select: %{
+          ticker: st.ticker,
+          vol: sum(st.size)
+        },
+        group_by: st.ticker,
+        order_by: [desc: sum(st.size)],
+        limit: 1
+      )
+      |> Repo.one()
+
+    assert res == %{ticker: "JPM", vol: 56}
+
+    order_field = :price
+
+    res =
+      from(
+        st in StockTrade,
+        select: st.ticker,
+        order_by: [asc: ^order_field],
         limit: 1
       )
       |> Repo.one()
@@ -179,6 +207,22 @@ defmodule Pillar.Ecto.RepoTest do
         group_by: st.ticker
       )
       |> Repo.all()
+
+    assert length(res) == 3
+  end
+
+  test "limit" do
+    res = from(st in StockTrade, limit: 1) |> Repo.all()
+
+    assert length(res) == 1
+
+    res = from(st in StockTrade, limit: 2) |> Repo.all()
+
+    assert length(res) == 2
+
+    limit = 3
+
+    res = from(st in StockTrade, limit: ^limit) |> Repo.all()
 
     assert length(res) == 3
   end
