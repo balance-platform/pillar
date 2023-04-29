@@ -6,11 +6,11 @@ defmodule Pillar.HttpClient do
           Pillar.HttpClient.Response.t()
           | Pillar.HttpClient.TransportError.t()
           | RuntimeError.t()
-  def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
+  def post(url, post_body \\ "", headers \\ [], options \\ [timeout: 10_000]) do
     http_adapter = adapter()
 
     if Code.ensure_loaded(http_adapter) && function_exported?(http_adapter, :post, 3) do
-      http_adapter.post(url, post_body, options)
+      http_adapter.post(url, post_body, headers, options)
     else
       %RuntimeError{message: "#{inspect(http_adapter)} is not loaded or unknown"}
     end

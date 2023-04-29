@@ -3,11 +3,12 @@ defmodule Pillar.HttpClient.TeslaMintAdapter do
   alias Pillar.HttpClient.Response
   alias Pillar.HttpClient.TransportError
 
-  def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
+  def post(url, post_body \\ "", headers \\ [], options \\ [timeout: 10_000]) do
     timeout = Keyword.get(options, :timeout, 10_000)
 
     middleware = [
       Tesla.Middleware.FollowRedirects,
+      {Tesla.Middleware.Headers, headers},
       {Tesla.Middleware.Timeout, timeout: timeout}
     ]
 

@@ -3,11 +3,17 @@ defmodule Pillar.HttpClient.HttpcAdapter do
   alias Pillar.HttpClient.Response
   alias Pillar.HttpClient.TransportError
 
-  def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
+  def post(url, post_body \\ "", headers \\ [], options \\ [timeout: 10_000]) do
+    headers =
+      headers
+      |> List.wrap()
+      |> Enum.map(fn {k, v} -> {String.to_charlist(k), String.to_charlist(v)} end)
+
     result =
       :httpc.request(
         :post,
-        {String.to_charlist(url), [{'te', 'application/json'}], 'application/json', post_body},
+        {String.to_charlist(url), headers ++ [{'te', 'application/json'}], 'application/json',
+         post_body},
         options,
         []
       )

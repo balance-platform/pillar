@@ -174,7 +174,7 @@ through config.
 config :pillar, Pillar.HttpClient, http_adapter: Pillar.HttpClient.TeslaMintAdapter
 ```
 
-Adapter should define one function `post/3` and return 2 possible results (`%Pillar.HttpClient.Response{}`, `%Pillar.HttpClient.TransportError{}`)
+Adapter should define one function `post/4` and return 2 possible results (`%Pillar.HttpClient.Response{}`, `%Pillar.HttpClient.TransportError{}`)
 
 # Contribution
 
