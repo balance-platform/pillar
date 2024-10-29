@@ -27,7 +27,7 @@ Online Analytical Processing (OLAP) database management system.
 ```elixir
 conn = Pillar.Connection.new("http://user:password@localhost:8123/database")
 
-# Params are passed in brackets {} in SQL query, and map strtucture does fill
+# Params are passed in brackets {} in SQL query, and map structure does fill
 # query by values.
 sql = "SELECT count(*) FROM users WHERE lastname = {lastname}"
 
