@@ -7,7 +7,8 @@ defmodule Pillar.HttpClient.HttpcAdapter do
     result =
       :httpc.request(
         :post,
-        {String.to_charlist(url), [{'te', 'application/json'}], 'application/json', post_body},
+        {String.to_charlist(url), [{~c"te", ~c"application/json"}], ~c"application/json",
+         post_body},
         options,
         []
       )

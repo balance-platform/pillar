@@ -112,7 +112,7 @@ defmodule Pillar.BulkInsertBufferTest do
       %{"major" => major, "minor" => minor} = version(conn)
 
       if (major >= 22 && minor >= 6) or major >= 23 do
-        # Clickhouse of this version doesn't return errors on insert becouse of internal queue
+        # Clickhouse of this version doesn't return errors on insert because of internal queue
         # skip test scenario on this version and newer
         :ok
       else

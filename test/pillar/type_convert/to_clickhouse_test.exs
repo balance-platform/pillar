@@ -22,14 +22,14 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
     test "String" do
       assert ToClickhouse.convert("Hello") == "'Hello'"
 
-      assert ToClickhouse.convert("Hello, here is single qoute '") ==
-               "'Hello, here is single qoute '''"
+      assert ToClickhouse.convert("Hello, here is single quote '") ==
+               "'Hello, here is single quote '''"
 
-      assert ToClickhouse.convert("Hello, here are two single qoutes '' ") ==
-               "'Hello, here are two single qoutes '''' '"
+      assert ToClickhouse.convert("Hello, here are two single quotes '' ") ==
+               "'Hello, here are two single quotes '''' '"
 
-      assert ToClickhouse.convert("Hello, here are two double qoutes \"\" ") ==
-               "'Hello, here are two double qoutes \"\" '"
+      assert ToClickhouse.convert("Hello, here are two double quotes \"\" ") ==
+               "'Hello, here are two double quotes \"\" '"
     end
 
     test "Map" do

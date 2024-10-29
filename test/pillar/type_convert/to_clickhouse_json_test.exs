@@ -18,14 +18,14 @@ defmodule Pillar.TypeConvert.ToClickhouseJsonTest do
     test "String" do
       assert ToClickhouseJson.convert("Hello") == "Hello"
 
-      assert ToClickhouseJson.convert("Hello, here is single qoute '") ==
-               "Hello, here is single qoute '"
+      assert ToClickhouseJson.convert("Hello, here is single quote '") ==
+               "Hello, here is single quote '"
 
-      assert ToClickhouseJson.convert("Hello, here are two single qoutes ''") ==
-               "Hello, here are two single qoutes ''"
+      assert ToClickhouseJson.convert("Hello, here are two single quotes ''") ==
+               "Hello, here are two single quotes ''"
 
-      assert ToClickhouseJson.convert("Hello, here are two double qoutes \"\"") ==
-               "Hello, here are two double qoutes \"\""
+      assert ToClickhouseJson.convert("Hello, here are two double quotes \"\"") ==
+               "Hello, here are two double quotes \"\""
     end
 
     test "Map" do

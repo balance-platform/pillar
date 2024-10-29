@@ -460,7 +460,7 @@ defmodule PillarTest do
         assert Pillar.select(conn, sql_array_values) ==
                  {:ok, [%{"test_map" => [bar: ["a", "b"], foo: ["1", "2", "3"]]}]}
       else
-        Logger.warn("Parentheses tests skip, becouse CH major version is lower than 21")
+        Logger.warning("Parentheses tests skip, because CH major version is lower than 21")
       end
     end
   end
@@ -548,7 +548,7 @@ defmodule PillarTest do
   end
 
   describe "#insert_to_table" do
-    test "bad request with unexistable fields", %{conn: conn} do
+    test "bad request with non-existent fields", %{conn: conn} do
       %{"major" => major, "minor" => minor} = version(conn)
 
       table_name = "to_table_inserts_with_fail_expected#{@timestamp}"
@@ -751,7 +751,7 @@ defmodule PillarTest do
                   %{"field4" => [{:baz, "bak"}, {:foo, "bar"}]}
                 ]} = Pillar.select(conn, "select * from #{table_name}")
       else
-        Logger.warn("insert keyword as map, because CH major version is lower than 21")
+        Logger.warning("insert keyword as map, because CH major version is lower than 21")
       end
     end
 
@@ -778,7 +778,7 @@ defmodule PillarTest do
                   %{"field5" => true}
                 ]} = Pillar.select(conn, "select * from #{table_name}")
       else
-        Logger.warn("insert keyword as boolean, because CH major version is lower than 21")
+        Logger.warning("insert keyword as boolean, because CH major version is lower than 21")
       end
     end
   end
