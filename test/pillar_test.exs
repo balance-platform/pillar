@@ -460,7 +460,7 @@ defmodule PillarTest do
         assert Pillar.select(conn, sql_array_values) ==
                  {:ok, [%{"test_map" => [bar: ["a", "b"], foo: ["1", "2", "3"]]}]}
       else
-        Logger.warn("Parentheses tests skip, becouse CH major version is lower than 21")
+        Logger.warning("Parentheses tests skip, becouse CH major version is lower than 21")
       end
     end
   end
@@ -510,32 +510,77 @@ defmodule PillarTest do
   test "JSON test", %{conn: conn} do
     %{"major" => major} = version(conn)
 
-    if major >= 23 do
-      test_json_map = %{"key" => "value", "int_key" => 5, "float_key" => 4.5}
-      table_name = "json_test_#{@timestamp}"
+    test_json_map = %{
+      "key" => "value",
+      "int_key" => 5,
+      "decimal_key" => Decimal.new(5),
+      "float_key" => 4.5,
+      "inner_key" => %{foo: 42},
+      "null_key" => nil
+    }
 
-      create_table_sql = """
-      CREATE TABLE IF NOT EXISTS #{table_name} (field JSON) ENGINE = Memory
-      """
+    table_name = "json_test_#{@timestamp}"
 
-      {:error, %Pillar.HttpClient.Response{status_code: status}} =
-        Pillar.query(conn, create_table_sql)
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS #{table_name} (field JSON) ENGINE = Memory
+    """
 
-      if status == 500 do
+    cond do
+      major >= 25 ->
+        # Pillar.query(conn, create_table_sql, %{}, %{ allow_experimental_object_type: true })
         assert {:ok, ""} =
-                 Pillar.query(conn, create_table_sql, %{}, %{allow_experimental_object_type: true})
+                 Pillar.query(conn, create_table_sql)
 
         assert {:ok, ""} =
-                 Pillar.insert_to_table(conn, table_name, %{
-                   "field" => {:json, test_json_map}
-                 })
+                 Pillar.insert_to_table(conn, table_name, %{"field" => {:json, test_json_map}})
 
-        assert {:ok, [%{"field" => %{"key" => "value", "int_key" => 5, "float_key" => 4.5}}]} =
+        assert {:ok,
+                [
+                  %{
+                    "field" => %{
+                      "key" => "value",
+                      "int_key" => 5,
+                      "inner_key" => %{"foo" => 42},
+                      "decimal_key" => 5,
+                      "float_key" => 4.5
+                    }
+                  }
+                ]} =
                  Pillar.select(conn, "SELECT * FROM #{table_name} LIMIT 1")
 
         assert {:ok, [%{"field.key" => "value"}]} =
                  Pillar.select(conn, "SELECT field.key FROM #{table_name} LIMIT 1")
-      end
+
+        assert {:ok, [%{"field.decimal_key" => 5}]} =
+                 Pillar.select(conn, "SELECT field.decimal_key FROM #{table_name} LIMIT 1")
+
+        assert {:ok, [%{"field.int_key" => 5}]} =
+                 Pillar.select(conn, "SELECT field.int_key FROM #{table_name} LIMIT 1")
+
+        assert {:ok, [%{"field.float_key" => 4.5}]} =
+                 Pillar.select(conn, "SELECT field.float_key FROM #{table_name} LIMIT 1")
+
+      major >= 23 ->
+        {:error, %Pillar.HttpClient.Response{status_code: status}} =
+          Pillar.query(conn, create_table_sql)
+
+        if status == 500 do
+          assert {:ok, ""} =
+                   Pillar.query(conn, create_table_sql, %{}, %{
+                     allow_experimental_object_type: true
+                   })
+
+          assert {:ok, ""} =
+                   Pillar.insert_to_table(conn, table_name, %{
+                     "field" => {:json, test_json_map}
+                   })
+
+          assert {:ok, [%{"field" => %{"key" => "value", "int_key" => 5, "float_key" => 4.5}}]} =
+                   Pillar.select(conn, "SELECT * FROM #{table_name} LIMIT 1")
+
+          assert {:ok, [%{"field.key" => "value"}]} =
+                   Pillar.select(conn, "SELECT field.key FROM #{table_name} LIMIT 1")
+        end
     end
   end
 
@@ -751,7 +796,7 @@ defmodule PillarTest do
                   %{"field4" => [{:baz, "bak"}, {:foo, "bar"}]}
                 ]} = Pillar.select(conn, "select * from #{table_name}")
       else
-        Logger.warn("insert keyword as map, because CH major version is lower than 21")
+        Logger.warning("insert keyword as map, because CH major version is lower than 21")
       end
     end
 
@@ -778,7 +823,7 @@ defmodule PillarTest do
                   %{"field5" => true}
                 ]} = Pillar.select(conn, "select * from #{table_name}")
       else
-        Logger.warn("insert keyword as boolean, because CH major version is lower than 21")
+        Logger.warning("insert keyword as boolean, because CH major version is lower than 21")
       end
     end
   end

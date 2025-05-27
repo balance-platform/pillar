@@ -16,26 +16,30 @@ permissions:
 
 jobs:
   tests:    
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: Tests on ${{matrix.environment.elixir-version}} / CH ${{matrix.clickhouse}} / HTTP Adapter ${{matrix.adapter}}
     strategy:
+      fail-fast: false
       matrix:
         adapter: [HttpcAdapter, TeslaMintAdapter]
-        clickhouse: [22.5, 22.9.2, 23.1]
+        clickhouse: [23.1, 25.5]
         environment:
-          - elixir-version: 1.14
-            otp-version: 25.0.4
-          - elixir-version: 1.13
-            otp-version: 24.3.4
+          - elixir-version: 1.15
+            otp-version: 25.0
+          - elixir-version: 1.18
+            otp-version: 27.3
     services:
       clickhouse:
         image: clickhouse/clickhouse-server:${{matrix.clickhouse}}
         ports:
         - 8123:8123
+        env:
+          CLICKHOUSE_USER: default
+          CLICKHOUSE_PASSWORD: default
     steps:
     - uses: actions/checkout@v3
     - name: Set up Elixir
-      uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
+      uses: erlef/setup-elixir@v1
       with: ${{matrix.environment}}
     - name: Restore dependencies cache
       uses: actions/cache@v3
@@ -54,10 +58,13 @@ jobs:
         mix deps.get
         mix compile
         mix format --check-formatted
+      env:
+        MIX_ENV: test
+        CLICKHOUSE_URL: "http://default:default@localhost:8123"
     - name: Run tests
       run: mix test
       env:
         PILLAR_HTTP_ADAPTER: ${{matrix.adapter}}
         MIX_ENV: test
-        CLICKHOUSE_URL: "http://localhost:8123"
+        CLICKHOUSE_URL: "http://default:default@localhost:8123"
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

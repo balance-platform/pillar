@@ -11,7 +11,7 @@ defmodule Pillar.Migrations.Migrate do
     files_and_modules = Base.compile_migration_files(path)
 
     Enum.map(files_and_modules, fn {filename, module} ->
-      result = migrate_if_was_not_migrated(connection, filename, module.up, options)
+      result = migrate_if_was_not_migrated(connection, filename, module.up(), options)
       {filename, result}
     end)
   end
