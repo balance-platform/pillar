@@ -2,7 +2,7 @@ defmodule Pillar.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/balance-platform/pillar"
-  @version "0.37.0"
+  @version "0.38.0"
 
   def project do
     [
@@ -10,7 +10,7 @@ defmodule Pillar.MixProject do
       name: "Pillar",
       aliases: aliases(),
       version: @version,
-      elixir: "~> 1.9",
+      elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
