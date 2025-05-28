@@ -11,4 +11,4 @@ config :pillar, Pillar.HttpClient, http_adapter: adapter
 
 config :pillar,
   connection_url:
-    System.get_env("CLICKHOUSE_URL") || "http://default:password@localhost:8123/default"
+    System.get_env("CLICKHOUSE_URL") || "http://default:default@localhost:8123/default"
