@@ -10,6 +10,10 @@ defmodule Pillar.TypeConvert.ToElixir do
     convert(type, value)
   end
 
+  def convert("Dynamic", value) do
+    value
+  end
+
   def convert("SimpleAggregateFunction" <> function_body, value) do
     [_, type] = Regex.run(~r/\(\w*, (.*)\)/, function_body)
     convert(type, value)
@@ -24,6 +28,10 @@ defmodule Pillar.TypeConvert.ToElixir do
   end
 
   def convert("UUID", value) do
+    value
+  end
+
+  def convert("JSON", value) when is_map(value) or is_list(value) do
     value
   end
 
@@ -112,8 +120,18 @@ defmodule Pillar.TypeConvert.ToElixir do
 
   def convert(clickhouse_type, value)
       when clickhouse_type in [
+             "Int8",
+             "Int16",
+             "Int32",
              "Int64",
-             "UInt64"
+             "Int128",
+             "Int256",
+             "UInt8",
+             "UInt16",
+             "UInt32",
+             "UInt64",
+             "UInt128",
+             "UInt256"
            ] and is_binary(value) do
     String.to_integer(value)
   end
@@ -123,9 +141,15 @@ defmodule Pillar.TypeConvert.ToElixir do
              "Int8",
              "Int16",
              "Int32",
+             "Int64",
+             "Int128",
+             "Int256",
              "UInt8",
              "UInt16",
-             "UInt32"
+             "UInt32",
+             "UInt64",
+             "UInt128",
+             "UInt256"
            ] and is_integer(value) do
     value
   end
@@ -160,7 +184,7 @@ defmodule Pillar.TypeConvert.ToElixir do
     Enum.zip(key_types, values)
     |> Enum.reduce(acc, fn
       {key_type, {_key, value}}, acc ->
-        [key, type] = String.split(key_type)
+        [key, type] = String.split(key_type, " ", parts: 2, trim: true)
         elem = {key, convert(type, value)}
         res = [elem | acc.res]
         %{res: res, type: :map}
@@ -187,7 +211,7 @@ defmodule Pillar.TypeConvert.ToElixir do
         datetime
 
       {:error, :utc_only_time_zone_database} ->
-        Logger.warn(
+        Logger.warning(
           "Add timezone database to your project if you want to use Timezones (tzdata or tz)."
         )
 

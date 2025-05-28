@@ -21,29 +21,15 @@ defmodule Pillar.TypeConvert.ToClickhouseJson do
   end
 
   def convert(param, db_version, query_options) when Decimal.is_decimal(param) do
-    cond do
-      Util.has_input_format_json_read_numbers_as_strings?(db_version) ->
-        Decimal.to_string(param)
-
-      Map.get(query_options, :decimal_as_float) == true ->
-        Decimal.to_float(param)
-
-      :else ->
-        raise "Your clickhouse version #{db_version} does not support inserting decimals as strings. You can allow converting decimals to floats by passing the option `query_options: %{decimal_as_float: true}` to insert_to_table"
-    end
+    fix_numbers(param, db_version, query_options)
   end
 
   def convert(param, _, _) when is_integer(param) do
     Integer.to_string(param)
   end
 
-  def convert(param, _, _) when is_boolean(param) do
-    case param do
-      true -> 1
-      false -> 0
-    end
-  end
-
+  def convert(true, _, _), do: 1
+  def convert(false, _, _), do: 0
   def convert(nil, _, _), do: nil
 
   def convert(param, _, _) when is_atom(param) do
@@ -75,11 +61,44 @@ defmodule Pillar.TypeConvert.ToClickhouseJson do
     param
   end
 
-  def convert({:json, param}, _, _) do
-    param
+  def convert({:json, param}, db_version, query_options) do
+    if Util.needs_decimal_zero_for_integers_in_json?(db_version),
+      do: fix_numbers(param, db_version, query_options),
+      else: param
   end
 
   def convert(param, _, _) do
     param
   end
+
+  defp fix_numbers(i, _, _) when is_integer(i), do: i * 1.0
+
+  defp fix_numbers(%Decimal{} = param, db_version, query_options) do
+    cond do
+      Util.needs_decimal_zero_for_integers_in_json?(db_version) ->
+        if Decimal.integer?(param),
+          do: Decimal.to_integer(param) * 1.0,
+          else: Decimal.to_string(param)
+
+      Util.has_input_format_json_read_numbers_as_strings?(db_version) ->
+        Decimal.to_string(param)
+
+      Map.get(query_options, :decimal_as_float) == true ->
+        Decimal.to_float(param)
+
+      :else ->
+        raise "Your clickhouse version #{db_version} does not support inserting decimals as strings. " <>
+                "You can allow converting decimals to floats by passing the option `query_options: %{decimal_as_float: true}` to insert_to_table"
+    end
+  end
+
+  defp fix_numbers(%_{} = struct, _, _), do: struct
+
+  defp fix_numbers(%{} = map, db_version, query_options),
+    do: Map.new(map, fn {k, v} -> {k, fix_numbers(v, db_version, query_options)} end)
+
+  defp fix_numbers(list, db_version, query_options) when is_list(list),
+    do: Enum.map(list, &fix_numbers(&1, db_version, query_options))
+
+  defp fix_numbers(any, _, _), do: any
 end

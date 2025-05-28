@@ -45,7 +45,7 @@ defmodule Pillar.MixProject do
       {:poolboy, "~> 1.5"},
       {:decimal, ">= 1.0.0"},
       {:tzdata, "~> 1.1", only: [:dev, :test]},
-      {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.1", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.21.0", only: [:dev], runtime: false},
       {:excoveralls, ">= 0.12.2", only: [:test], runtime: false}
     ]

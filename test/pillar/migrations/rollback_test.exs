@@ -38,22 +38,13 @@ defmodule Pillar.Migrations.RollbackTest do
     assert Enum.empty?(result)
 
     # Checks, that tables are deleted
-    assert {:error, %Response{body: body}} =
-             Pillar.query(conn, "select count(*) from example_table")
+    Enum.each(["", 2, 3, 4], fn suffix ->
+      assert {:error, %Response{body: body}} =
+               Pillar.query(conn, "select count(*) from example_table#{suffix}")
 
-    assert {:error, %Response{body: body2}} =
-             Pillar.query(conn, "select count(*) from example_table2")
-
-    assert {:error, %Response{body: body3}} =
-             Pillar.query(conn, "select count(*) from example_table3")
-
-    assert {:error, %Response{body: body4}} =
-             Pillar.query(conn, "select count(*) from example_table4")
-
-    assert body =~ ~r/example_table doesn\'t exist/
-    assert body2 =~ ~r/example_table2 doesn\'t exist/
-    assert body3 =~ ~r/example_table3 doesn\'t exist/
-    assert body4 =~ ~r/example_table4 doesn\'t exist/
+      assert body =~ ~r/Code: 60. DB::Exception/
+      assert body =~ ~r/example_table#{suffix}/
+    end)
   end
 
   test "#list_of_success_migrations", %{conn: conn} do

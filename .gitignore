@@ -26,3 +26,5 @@ erl_crash.dump
 pillar-*.tar
 
 vscode
+
+.elixir-tools/

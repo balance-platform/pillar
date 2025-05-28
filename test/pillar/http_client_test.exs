@@ -12,14 +12,15 @@ defmodule Pillar.HttpClientTest do
     end
 
     test "System.get_env(PILLAR_HTTP_ADAPTER) sets adapter" do
-      if value = System.get_env("PILLAR_HTTP_ADAPTER") != nil do
-        if value == "HttpcAdapter" do
-          assert HttpClient.adapter() == Pillar.HttpClient.HttpcAdapter
-        end
+      case System.get_env("PILLAR_HTTP_ADAPTER") do
+        nil ->
+          :ok
 
-        if value == "TeslaMintAdapter" do
+        "HttpcAdapter" ->
+          assert HttpClient.adapter() == Pillar.HttpClient.HttpcAdapter
+
+        "TeslaMintAdapter" ->
           assert HttpClient.adapter() == Pillar.HttpClient.TeslaMintAdapter
-        end
       end
     end
   end

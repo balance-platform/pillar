@@ -30,7 +30,7 @@ defmodule Pillar.Migrations.Rollback do
 
   def do_rollback(connection, module, options \\ %{}) do
     if function_exported?(module, :down, 0) do
-      sql = module.down
+      sql = module.down()
 
       multi = Base.multify_sql(sql)
 

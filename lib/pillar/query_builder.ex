@@ -1,7 +1,6 @@
 defmodule Pillar.QueryBuilder do
   @moduledoc false
-  alias Pillar.TypeConvert.ToClickhouse
-  alias Pillar.TypeConvert.ToClickhouseJson
+  alias Pillar.TypeConvert.{ToClickhouse, ToClickhouseJson}
 
   def query(query, params) when is_map(params) do
     case Enum.empty?(params) do
@@ -51,9 +50,8 @@ defmodule Pillar.QueryBuilder do
   defp convert_values_to_clickhouse_for_json_insert(map, db_version, query_options) do
     map
     |> Enum.reject(fn {_key, value} -> is_nil(value) end)
-    |> Enum.map(fn {key, value} ->
+    |> Map.new(fn {key, value} ->
       {key, ToClickhouseJson.convert(value, db_version, query_options)}
     end)
-    |> Map.new()
   end
 end
