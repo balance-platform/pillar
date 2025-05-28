@@ -1,11 +1,25 @@
 defmodule Pillar.HttpClient do
   @moduledoc false
-  @default_http_adapter Pillar.HttpClient.TeslaMintAdapter
 
-  @spec post(String.t(), String.t(), Keyword.t()) ::
-          Pillar.HttpClient.Response.t()
-          | Pillar.HttpClient.TransportError.t()
-          | RuntimeError.t()
+  defmodule Adapter do
+    @moduledoc "A behaviour to be implemented by adapters"
+
+    @doc "A callback to be implemented by adapters"
+    @callback post(url :: String.t(), post_body :: String.t(), options :: keyword()) ::
+                Pillar.HttpClient.Response.t()
+                | Pillar.HttpClient.TransportError.t()
+                | %{__struct__: RuntimeError, message: String.t()}
+  end
+
+  @default_http_adapter Application.compile_env(
+                          :pillar,
+                          :http_adapter,
+                          Pillar.HttpClient.TeslaMintAdapter
+                        )
+
+  @behaviour Adapter
+
+  @impl Adapter
   def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
     http_adapter = adapter()
 
@@ -17,11 +31,9 @@ defmodule Pillar.HttpClient do
   end
 
   def adapter do
-    module =
-      Application.get_all_env(:pillar)
-      |> Access.get(__MODULE__, [])
-      |> Access.get(:http_adapter)
-
-    module || @default_http_adapter
+    :pillar
+    |> Application.get_env(__MODULE__, [])
+    |> Keyword.get(:http_adapter)
+    |> Kernel.||(@default_http_adapter)
   end
 end

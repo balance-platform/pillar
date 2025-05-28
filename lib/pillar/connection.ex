@@ -10,7 +10,8 @@ defmodule Pillar.Connection do
     false => 0
   }
 
-  @type t() :: %{
+  @type t :: %{
+          __struct__: __MODULE__,
           host: String.t(),
           port: integer,
           scheme: String.t(),
@@ -41,8 +42,8 @@ defmodule Pillar.Connection do
   %Pillar.Connection{} = Pillar.Connection.new("https://localhost:8123")
   ```
   """
-  @spec new(String.t()) :: Pillar.Connection.t()
-  def new(str) do
+  @spec new(url :: String.t(), params :: keyword() | map()) :: t()
+  def new(str, params \\ %{}) do
     uri = URI.parse(str)
 
     info = uri.userinfo
@@ -54,17 +55,23 @@ defmodule Pillar.Connection do
         :else -> String.split(info, ":")
       end
 
-    params = URI.decode_query(uri.query || "")
+    query_params = URI.decode_query(uri.query || "")
+    max_query_size = nil_or_string_to_int(query_params["max_query_size"])
 
-    %__MODULE__{
-      host: uri.host,
-      port: uri.port,
-      scheme: uri.scheme,
-      database: Path.basename(uri.path || "default"),
-      user: user,
-      password: password,
-      max_query_size: nil_or_string_to_int(params["max_query_size"])
-    }
+    data =
+      %{
+        host: uri.host,
+        port: uri.port,
+        scheme: uri.scheme,
+        database: Path.basename(uri.path || "default"),
+        user: user,
+        password: password,
+        max_query_size: max_query_size
+      }
+      |> Map.merge(Map.new(params))
+
+    __MODULE__
+    |> struct(data)
     |> add_version()
   end
 
