@@ -63,7 +63,7 @@ defmodule Pillar.MixProject do
       # This option is only needed when you don't want to use the OTP application name
       name: "pillar",
       # These are the default files included in the package
-      files: ~w(lib .formatter.exs mix.exs README*),
+      files: ~w(lib .formatter.exs mix.exs README* stuff/*),
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/balance-platform/pillar"}
     ]
@@ -81,7 +81,84 @@ defmodule Pillar.MixProject do
       main: "readme",
       source_ref: "v#{@version}",
       source_url: @source_url,
-      extras: ["README.md"]
+
+      # Additional metadata
+      authors: ["Aleksei Matiushkin", "Contributors from balance-platform/pillar"],
+
+      # Document Organization
+      extras: [
+        "README.md": [title: "Overview"],
+        "stuff/guides/getting_started.md": [title: "Getting Started"],
+        "stuff/guides/connection_pool.md": [title: "Connection Pool"],
+        "stuff/guides/migrations.md": [title: "Migrations"],
+        "stuff/guides/bulk_inserts.md": [title: "Bulk Insert Strategies"],
+        "stuff/advanced/custom_types.md": [title: "Custom Type Conversions"],
+        "stuff/advanced/http_adapters.md": [title: "HTTP Adapters"],
+        "stuff/troubleshooting.md": [title: "Troubleshooting"]
+      ],
+
+      # Document Groups for Navigation
+      groups_for_extras: [
+        Guides: ~r/guides\//,
+        "Advanced Usage": ~r/advanced\//,
+        Troubleshooting: ~r/troubleshooting/
+      ],
+
+      # Module Organization
+      groups_for_modules: [
+        Core: [
+          Pillar,
+          Pillar.Connection
+        ],
+        "Query Building & Execution": [
+          Pillar.QueryBuilder,
+          Pillar.ResponseParser
+        ],
+        "Bulk Operations": [
+          Pillar.BulkInsertBuffer
+        ],
+        Migrations: [
+          Pillar.Migrations.Generator,
+          Pillar.MigrationsMacro
+        ],
+        "HTTP Client": [
+          Pillar.HttpClient.Adapter,
+          Pillar.HttpClient.Response,
+          Pillar.HttpClient.TransportError
+        ],
+        "Type Conversion": [
+          Pillar.TypeConvert.ToClickhouse,
+          Pillar.TypeConvert.ToClickhouseJson,
+          Pillar.TypeConvert.ToElixir
+        ]
+      ],
+
+      # Skip warnings for undefined references
+      skip_undefined_reference_warnings_on: ["CHANGELOG.md"],
+
+      # Format specific options
+      formatters: ["html"],
+
+      # Before closing HTML tag in head
+      before_closing_head_tag: &before_closing_head_tag/1
     ]
   end
+
+  # Add custom JavaScript or CSS if needed
+  defp before_closing_head_tag(:html) do
+    """
+    <style>
+      /* Custom CSS for documentation */
+      .content-inner {
+        max-width: 80ch;
+        margin: 0 auto;
+      }
+      .sidebar-header {
+        margin-bottom: 1rem;
+      }
+    </style>
+    """
+  end
+
+  defp before_closing_head_tag(_), do: ""
 end

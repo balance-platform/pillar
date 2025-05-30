@@ -1,8 +1,10 @@
 defmodule Pillar.HttpClient.TeslaMintAdapter do
   @moduledoc false
-  alias Pillar.HttpClient.Response
-  alias Pillar.HttpClient.TransportError
+  alias Pillar.HttpClient.{Adapter, Response, TransportError}
 
+  @behaviour Adapter
+
+  @impl Adapter
   def post(url, post_body \\ "", options \\ [timeout: 10_000]) do
     timeout = Keyword.get(options, :timeout, 10_000)
 
