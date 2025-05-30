@@ -2,7 +2,7 @@ defmodule Pillar.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/balance-platform/pillar"
-  @version "0.38.0"
+  @version "0.39.0"
 
   def project do
     [
@@ -83,7 +83,14 @@ defmodule Pillar.MixProject do
       source_url: @source_url,
 
       # Additional metadata
-      authors: ["Aleksei Matiushkin", "Contributors from balance-platform/pillar"],
+      authors: [
+        "Dmitry Shpagin",
+        "Maintainer balance-platform/pillar",
+        "Aleksei Matiushkin",
+        "Contributors from balance-platform/pillar",
+        "Aleksey Redkin",
+        "Contributors from balance-platform/pillar"
+      ],
 
       # Document Organization
       extras: [

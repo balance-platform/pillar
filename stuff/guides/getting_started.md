@@ -9,7 +9,7 @@ Add `pillar` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:pillar, "~> 0.40.0"}
+    {:pillar, "~> 0.39.0"}
   ]
 end
 ```

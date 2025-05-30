@@ -6,7 +6,7 @@ defmodule Pillar.Migrations.BaseTest do
 
   test "#compile_migration_files" do
     assert [
-             {"1592062613_example_migration.exs", Pillar.Migrations.Example_migration}
+             {"1592062613_example_migration.exs", Pillar.Migrations.ExampleMigration}
              | _tail
            ] = Base.compile_migration_files(@default_path)
   end

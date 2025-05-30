@@ -40,7 +40,7 @@ defmodule Pillar.Migrations.Base do
     name =
       filename
       |> String.replace(~r/\d+_(.*).exs/, "\\1")
-      |> String.capitalize()
+      |> Macro.camelize()
 
     "Elixir.Pillar.Migrations."
     |> Kernel.<>(name)

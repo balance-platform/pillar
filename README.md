@@ -44,7 +44,7 @@ Add `pillar` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:pillar, "~> 0.40.0"}
+    {:pillar, "~> 0.39.0"}
   ]
 end
 ```
@@ -403,7 +403,7 @@ To enable timezone support:
 ```elixir
 defp deps do
   [
-    {:pillar, "~> 0.40.0"},
+    {:pillar, "~> 0.39.0"},
     {:tzdata, "~> 1.1"}
   ]
 end

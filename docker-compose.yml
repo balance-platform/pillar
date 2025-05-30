@@ -1,0 +1,12 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.5
+    restart: on-failure
+    ports:
+      - 8123:8123
+    labels:
+      NAME: "pillar-docker-compose-clickhouse"
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: default
+
