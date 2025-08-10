@@ -6,7 +6,7 @@ defmodule Pillar do
   ## Overview
 
   Pillar provides a straightforward way to interact with ClickHouse databases from Elixir,
-  supporting both direct connections and connection pools. It handles query building, 
+  supporting both direct connections and connection pools. It handles query building,
   parameter substitution, and response parsing.
 
   The library offers the following core features:
@@ -185,7 +185,7 @@ defmodule Pillar do
   Executes an arbitrary SQL query against a ClickHouse database.
 
   This function can be used for any type of query (SELECT, CREATE, ALTER, etc.)
-  but doesn't format the response as JSON. For SELECT queries with formatted 
+  but doesn't format the response as JSON. For SELECT queries with formatted
   results, consider using `select/4` instead.
 
   ## Parameters
@@ -244,8 +244,8 @@ defmodule Pillar do
   ## Examples
 
   ```elixir
-  {:ok, users} = Pillar.select(conn, 
-    "SELECT id, name, email FROM users WHERE signup_date > {date} LIMIT {limit}", 
+  {:ok, users} = Pillar.select(conn,
+    "SELECT id, name, email FROM users WHERE signup_date > {date} LIMIT {limit}",
     %{date: "2023-01-01", limit: 100}
   )
 
@@ -470,6 +470,8 @@ defmodule Pillar do
           pool_timeout()
         )
       end
+
+      defoverridable(connection_strings: 0, poolboy_config: 0)
     end
   end
 end
