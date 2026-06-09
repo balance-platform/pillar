@@ -3,6 +3,13 @@ defmodule Pillar.TypeConvert.ToElixir do
 
   require Logger
 
+  # A JSON `null` decodes to `nil` regardless of the declared column type.
+  # ClickHouse serialises NaN/Inf in a non-Nullable numeric column (and null
+  # elements inside arrays) as `null`, which would otherwise match no clause
+  # below and raise a FunctionClauseError. This must precede the Array/Map/Tuple
+  # clauses so a `null` is caught before they attempt to enumerate it.
+  def convert(_clickhouse_type, nil), do: nil
+
   def convert("(" <> type_with_parenthese, value) do
     # For example (UInt64), this type returns when IF function returns NULL or Uint64
     # SELECT IF(1 == 2, NULL, 64)
