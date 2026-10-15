@@ -82,9 +82,15 @@ defmodule Pillar.TypeConvert.ToClickhouse do
     |> convert
   end
 
+  # ClickHouse string literals treat backslash as an escape character, so backslashes must be
+  # escaped along with single quotes. Otherwise a backslash in the value is dropped or changes
+  # the meaning of the character after it, including the quote which ends the literal.
   def convert(param) do
-    single_quotes_escaped = String.replace(param, "'", "''")
+    escaped =
+      param
+      |> String.replace("\\", "\\\\")
+      |> String.replace("'", "''")
 
-    ~s('#{single_quotes_escaped}')
+    ~s('#{escaped}')
   end
 end

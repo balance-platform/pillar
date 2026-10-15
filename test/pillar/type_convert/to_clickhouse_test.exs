@@ -32,6 +32,18 @@ defmodule Pillar.TypeConvert.ToClickhouseTest do
                "'Hello, here are two double qoutes \"\" '"
     end
 
+    test "String with backslashes" do
+      assert ToClickhouse.convert("C:\\path") == "'C:\\\\path'"
+      assert ToClickhouse.convert("ends with a backslash \\") == "'ends with a backslash \\\\'"
+
+      assert ToClickhouse.convert("backslash before a quote \\'") ==
+               "'backslash before a quote \\\\'''"
+    end
+
+    test "Map with backslashes" do
+      assert ToClickhouse.convert(%{path: "C:\\dir"}) == "'{\"path\":\"C:\\\\\\\\dir\"}'"
+    end
+
     test "Map" do
       assert ToClickhouse.convert(%{key: "value"}) == ~S('{"key":"value"}')
     end

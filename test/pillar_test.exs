@@ -123,6 +123,13 @@ defmodule PillarTest do
       assert {:ok, [%{"res" => "'; SELECT 3 as INJECTED"}]} ==
                Pillar.select(conn, "select {arg} as res", %{arg: "'; SELECT 3 as INJECTED"})
     end
+
+    test "backslashes stay inside the string literal", %{conn: conn} do
+      for value <- ["C:\\path", "ends with a backslash \\", "backslash before a quote \\'"] do
+        assert {:ok, [%{"res" => ^value}]} =
+                 Pillar.select(conn, "select {arg} as res", %{arg: value})
+      end
+    end
   end
 
   describe "data types tests" do
